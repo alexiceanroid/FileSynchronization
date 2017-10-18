@@ -14,15 +14,66 @@ namespace FileSynchronization
     {
         static void Main(string[] args)
         {
-            GoodSync execInstance = new GoodSync();
-            InitializeFolderMappings(execInstance);
             
+            GoodSync execInstance = InitializeFolderMappings();
             
+
+            InitializeFiles(execInstance);
+
+        }
+
+        private static void InitializeFiles(GoodSync execInstance)
+        {
+            var folderMappings = execInstance.folderMappings;
+            
+
+            foreach (var pair in folderMappings)
+            {
+                PopulateSourceFiles(execInstance, pair.Key);
+                PopulateDestinationFiles(execInstance, pair.Value);
+                PopulateSourceFilesToProcess(execInstance);
+            }
+        }
+
+        private static void PopulateSourceFiles(GoodSync execInstance, string sourceFolder)
+        {
+            if (File.Exists(sourceFolder))
+            {
+                // This path is a file
+                ProcessFile(sourceFolder);
+            }
+            else if (Directory.Exists(sourceFolder))
+            {
+                // This path is a directory
+                ProcessDirectory(sourceFolder);
+            }
+        }
+
+        // Process all files in the directory passed in, recurse on any directories 
+        // that are found, and process the files they contain.
+        public static void ProcessDirectory(string targetDirectory)
+        {
+            // Process the list of files found in the directory.
+            string[] fileEntries = Directory.GetFiles(targetDirectory);
+            foreach (string fileName in fileEntries)
+                ProcessFile(fileName);
+
+            // Recurse into subdirectories of this directory.
+            string[] subdirectoryEntries = Directory.GetDirectories(targetDirectory);
+            foreach (string subdirectory in subdirectoryEntries)
+                ProcessDirectory(subdirectory);
+        }
+
+        // Insert logic for processing found files here.
+        public static void ProcessFile(string path)
+        {
             
         }
 
-        private static void InitializeFolderMappings(GoodSync execInstance)
+
+        private static GoodSync InitializeFolderMappings()
         {
+            GoodSync execInstance = new GoodSync();
             try
             {
                 var configReader = new AppSettingsReader();
@@ -44,9 +95,12 @@ namespace FileSynchronization
             }
             catch (Exception e)
             {
-                execInstance.ResultStatus = "error";
+                execInstance.ResultStatus = ResultStatusEnum.Error;
                 execInstance.ResultInfo = e.Message;
             }
+            
+            return execInstance;
+            
         }
     }
    
