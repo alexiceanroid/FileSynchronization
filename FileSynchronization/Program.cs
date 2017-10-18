@@ -17,57 +17,68 @@ namespace FileSynchronization
             
             GoodSync execInstance = InitializeFolderMappings();
             
-
+            // initialize source and destination files:
             InitializeFiles(execInstance);
 
         }
 
         private static void InitializeFiles(GoodSync execInstance)
         {
-            var folderMappings = execInstance.folderMappings;
+            var folderMappings = execInstance.FolderMappings;
             
 
             foreach (var pair in folderMappings)
             {
                 PopulateSourceFiles(execInstance, pair.Key);
                 PopulateDestinationFiles(execInstance, pair.Value);
-                PopulateSourceFilesToProcess(execInstance);
             }
+        }
+
+        private static void PopulateDestinationFiles(GoodSync execInstance, string destinationFolder)
+        {
+            GetFileInfos(destinationFolder, execInstance.DestinationFiles);
         }
 
         private static void PopulateSourceFiles(GoodSync execInstance, string sourceFolder)
         {
-            if (File.Exists(sourceFolder))
+            GetFileInfos(sourceFolder, execInstance.SourceFiles);
+        }
+
+        private static void GetFileInfos(string path, HashSet<FileInfo> fileInfos)
+        {
+            
+            if (File.Exists(path))
             {
                 // This path is a file
-                ProcessFile(sourceFolder);
+                ProcessFile(path, fileInfos);
             }
-            else if (Directory.Exists(sourceFolder))
+            else if (Directory.Exists(path))
             {
                 // This path is a directory
-                ProcessDirectory(sourceFolder);
+                ProcessDirectory(path, fileInfos);
             }
         }
 
         // Process all files in the directory passed in, recurse on any directories 
         // that are found, and process the files they contain.
-        public static void ProcessDirectory(string targetDirectory)
+        public static void ProcessDirectory(string targetDirectory, HashSet<FileInfo> fileInfos)
         {
             // Process the list of files found in the directory.
             string[] fileEntries = Directory.GetFiles(targetDirectory);
             foreach (string fileName in fileEntries)
-                ProcessFile(fileName);
+                ProcessFile(fileName, fileInfos);
 
             // Recurse into subdirectories of this directory.
             string[] subdirectoryEntries = Directory.GetDirectories(targetDirectory);
             foreach (string subdirectory in subdirectoryEntries)
-                ProcessDirectory(subdirectory);
+                ProcessDirectory(subdirectory, fileInfos);
         }
 
-        // Insert logic for processing found files here.
-        public static void ProcessFile(string path)
+        
+        public static void ProcessFile(string path, HashSet<FileInfo> fileInfos)
         {
-            
+            FileInfo file = new FileInfo(path);
+            fileInfos.Add(file);
         }
 
 
