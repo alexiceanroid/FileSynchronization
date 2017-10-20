@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Kernel32.cs" />
     <Compile Include="SyncConfig.cs" />
     <Compile Include="Init.cs" />
     <Compile Include="Program.cs" />

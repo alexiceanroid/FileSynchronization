@@ -66,7 +66,7 @@ namespace FileSynchronization
         {
             FileInfo file = new FileInfo(path);
             fileInfos.Add(file);
-            
+            //Console.WriteLine(Kernel32.GetFileIdentifier(file.FullName));
         }
 
 
