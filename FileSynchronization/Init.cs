@@ -9,26 +9,26 @@ namespace FileSynchronization
 {
     internal static class Init
     {
-        internal static void InitializeFiles(GoodSync execInstance)
+        internal static void InitializeFiles(SyncConfig confInstance)
         {
-            var folderMappings = execInstance.FolderMappings;
+            var folderMappings = confInstance.FolderMappings;
 
 
             foreach (var pair in folderMappings)
             {
-                PopulateSourceFiles(execInstance, pair.Key);
-                PopulateDestinationFiles(execInstance, pair.Value);
+                PopulateSourceFiles(confInstance, pair.Key);
+                PopulateDestinationFiles(confInstance, pair.Value);
             }
         }
 
-        private static void PopulateDestinationFiles(GoodSync execInstance, string destinationFolder)
+        private static void PopulateDestinationFiles(SyncConfig confInstance, string destinationFolder)
         {
-            GetFileInfos(destinationFolder, execInstance.DestinationFiles);
+            GetFileInfos(destinationFolder, confInstance.DestinationFiles);
         }
 
-        private static void PopulateSourceFiles(GoodSync execInstance, string sourceFolder)
+        private static void PopulateSourceFiles(SyncConfig confInstance, string sourceFolder)
         {
-            GetFileInfos(sourceFolder, execInstance.SourceFiles);
+            GetFileInfos(sourceFolder, confInstance.SourceFiles);
         }
 
         private static void GetFileInfos(string path, HashSet<FileInfo> fileInfos)
@@ -66,12 +66,13 @@ namespace FileSynchronization
         {
             FileInfo file = new FileInfo(path);
             fileInfos.Add(file);
+            
         }
 
 
-        internal static GoodSync InitializeFolderMappings()
+        internal static SyncConfig InitializeFolderMappings()
         {
-            GoodSync execInstance = new GoodSync();
+            SyncConfig confInstance = new SyncConfig();
             try
             {
                 var configReader = new AppSettingsReader();
@@ -88,16 +89,15 @@ namespace FileSynchronization
                 {
                     string sourceFolder = el.Element("SourceFolder").Value;
                     string destFolder = el.Element("DestinationFolder").Value;
-                    execInstance.FolderMappings.Add(sourceFolder, destFolder);
+                    confInstance.FolderMappings.Add(sourceFolder, destFolder);
                 }
             }
             catch (Exception e)
             {
-                execInstance.ResultStatus = ResultStatusEnum.Error;
-                execInstance.ResultInfo = e.Message;
+                throw e;
             }
 
-            return execInstance;
+            return confInstance;
 
         }
     }

@@ -17,10 +17,10 @@ namespace FileSynchronization
         static void Main(string[] args)
         {
             // read and initialize source and destination folder mappings:
-            GoodSync execInstance = Init.InitializeFolderMappings();
+            SyncConfig confInstance = Init.InitializeFolderMappings();
             
             // initialize source and destination files:
-            Init.InitializeFiles(execInstance);
+            Init.InitializeFiles(confInstance);
 
             
 
