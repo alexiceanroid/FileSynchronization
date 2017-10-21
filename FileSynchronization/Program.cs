@@ -14,23 +14,27 @@ namespace FileSynchronization
 {
     class Program
     {
-        private static FileSystemWatcher watcher;
+        
         static void Main(string[] args)
+        {
+            var confInstance = PrepareSyncConfig();
+
+            var syncExec = new SyncExecution(confInstance);
+
+
+
+        }
+
+        static SyncConfig PrepareSyncConfig()
         {
             // read and initialize source and destination folder mappings:
             SyncConfig confInstance = Init.InitializeFolderMappings();
-            
+
             // initialize source and destination files:
             Init.InitializeFiles(confInstance);
-
-            string source_path = @"C:\temp\source folder2\New Text Document2.txt";
-            string dest_path = @"C:\temp\destination folder\New Text Document.txt";
-
-            Console.WriteLine("source:      " + Kernel32.GetCustomFileId(source_path));
-            Console.WriteLine("destination: " + Kernel32.GetCustomFileId(dest_path));
+            return confInstance;
         }
-
-        }
+    }
 
         
 }

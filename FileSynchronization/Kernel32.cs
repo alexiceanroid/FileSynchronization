@@ -61,17 +61,5 @@ namespace FileSynchronization
             GetFileInformation(path, out info);
             return info.FileIndexLow.ToString() + "-" + info.FileIndexHigh.ToString();
         }
-
-        public static void ShowFileInfo(string path)
-        {
-            BY_HANDLE_FILE_INFORMATION info;
-            GetFileInformation(path, out info);
-            Console.WriteLine("Volume serial number: " + info.VolumeSerialNumber);
-            Console.WriteLine("NumberOfLinks: " + info.NumberOfLinks);
-            Console.WriteLine("FileIndexHigh: " + info.FileIndexHigh);
-            Console.WriteLine("FileIndexLow: " + info.FileIndexLow + "\n");
-        }
     }
-
-
 }
