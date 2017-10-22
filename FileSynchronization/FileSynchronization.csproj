@@ -45,6 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DirectoryFilesProcessing.cs" />
+    <Compile Include="DriveHelper.cs" />
     <Compile Include="FilePairAction.cs" />
     <Compile Include="Kernel32.cs" />
     <Compile Include="SyncConfig.cs" />

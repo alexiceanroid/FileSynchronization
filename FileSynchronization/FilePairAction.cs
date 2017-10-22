@@ -24,6 +24,7 @@ namespace FileSynchronization
 
     public enum ActionType
     {
+        Undefined,
         Create, 
         Rename,
         Move,
@@ -33,6 +34,7 @@ namespace FileSynchronization
 
     public enum Direction
     {
+        Undefined,
         SourceToDestination,
         DestinationToSource
     }

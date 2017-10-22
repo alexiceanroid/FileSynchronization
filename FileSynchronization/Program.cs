@@ -17,11 +17,14 @@ namespace FileSynchronization
         
         static void Main(string[] args)
         {
+            
             var confInstance = PrepareSyncConfig();
 
             var syncExec = new SyncExecution(confInstance);
 
-
+            syncExec.PopulateActionList();
+            
+            
 
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Text;
 
@@ -11,6 +12,8 @@ namespace FileSynchronization
     public class CsvRow : List<string>
     {
         public string LineText { get; set; }
+        internal static char _delimiter = ',';
+        
     }
 
     /// <summary>
@@ -18,6 +21,7 @@ namespace FileSynchronization
     /// </summary>
     public class CsvFileWriter : StreamWriter
     {
+        
         public CsvFileWriter(Stream stream)
             : base(stream)
         {
@@ -40,7 +44,7 @@ namespace FileSynchronization
             {
                 // Add separator if this isn't the first value
                 if (!firstColumn)
-                    builder.Append(',');
+                    builder.Append(CsvRow._delimiter);
                 // Implement special handling for values that contain comma or quote
                 // Enclose in quotes and double up any double quotes
                 if (value.IndexOfAny(new char[] { '"', ',' }) != -1)
@@ -77,6 +81,7 @@ namespace FileSynchronization
         public bool ReadRow(CsvRow row)
         {
             row.LineText = ReadLine();
+            
             if (String.IsNullOrEmpty(row.LineText))
                 return false;
 
@@ -120,7 +125,7 @@ namespace FileSynchronization
                 {
                     // Parse unquoted value
                     int start = pos;
-                    while (pos < row.LineText.Length && row.LineText[pos] != ',')
+                    while (pos < row.LineText.Length && row.LineText[pos] != CsvRow._delimiter)
                         pos++;
                     value = row.LineText.Substring(start, pos - start);
                 }
@@ -133,7 +138,7 @@ namespace FileSynchronization
                 rows++;
 
                 // Eat up to and including next comma
-                while (pos < row.LineText.Length && row.LineText[pos] != ',')
+                while (pos < row.LineText.Length && row.LineText[pos] != CsvRow._delimiter)
                     pos++;
                 if (pos < row.LineText.Length)
                     pos++;
@@ -142,10 +147,130 @@ namespace FileSynchronization
             while (row.Count > rows)
                 row.RemoveAt(rows);
 
+            // if last column contains empty string, row intance is known to contain only 
+            if (row.LineText[pos - 1] == CsvRow._delimiter)
+            {
+                row.Add("");
+            }
+
             // Return true if any columns read
             return (row.Count > 0);
         }
     }
 
-    
+    public static class CSVHelper
+    {
+        
+        static readonly AppSettingsReader configReader = new AppSettingsReader();
+        private static readonly string fileMappingCsvFile = "FileID_mappings";
+        static readonly string fileMappingCsvLocation = (string)configReader.GetValue(fileMappingCsvFile, typeof(string));
+
+        // the assumption is that CSV file has the following structure:
+        // <firstFileType>,<firstBasePath>,<firstFileId>,<secondFileType>,<secondBasePath>,<secondFileId>
+        public static void PopulateFileMappingFromCsv(SyncConfig confInstance)
+        {
+            var fileMapping = confInstance.FileMapping;
+
+            if (File.Exists(fileMappingCsvLocation))
+            {
+                // Read data from CSV file
+                using (CsvFileReader reader = new CsvFileReader(fileMappingCsvLocation))
+                {
+                    CsvRow row = new CsvRow();
+                    while (reader.ReadRow(row))
+                    {
+                        if (row.Count < 2 )
+                            break;
+                        var firstFileType = row[0];
+                        var firstBasePath = row[1];
+                        var firstFileId = row[2];
+                        var firstFileExtended = GetFileExendedFromCsvRow(firstFileType, firstBasePath, firstFileId);
+
+                        var secondFileType = row[3];
+                        var secondBasePath = row[4];
+                        var secondFileId = row[5];
+                        var secondFileExtended = GetFileExendedFromCsvRow(secondFileType, secondBasePath, secondFileId);
+
+                        confInstance.FileMapping.Add(firstFileExtended, secondFileExtended);
+                    }
+                }
+            }
+            
+        }
+
+        private static FileExtended GetFileExendedFromCsvRow(string fileType, string basePath, string fileId)
+        {
+            if (fileType == "" && basePath == "" && fileId == "")
+            {
+                return null;
+            }
+
+            string filePath="";
+            var allFilesList = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories);
+            foreach (var iteration_file in allFilesList)
+            {
+                var iteration_fileId = Kernel32.GetCustomFileId(iteration_file);
+                if (fileId == iteration_fileId)
+                {
+                    filePath = iteration_file;
+                }
+            }
+
+            FileExtended fileExtended;
+            if (!String.IsNullOrEmpty(filePath))
+            {
+                fileExtended = new FileExtended
+                {
+                    FileType = (FileType)Enum.Parse(typeof(FileType), fileType),
+                    FileInfo = new FileInfo(filePath),
+                    BasePath = basePath,
+                    FileID = Kernel32.GetCustomFileId(filePath)
+                };
+                return fileExtended;
+            }
+            return null;
+
+        }
+
+        public static void SaveFileMappingToCsv(SyncConfig confInstance)
+        {
+            // Write data to CSV file
+
+            var fileMapping = confInstance.FileMapping;
+            using (var writer = new CsvFileWriter(fileMappingCsvLocation))
+            {
+                foreach (var filePair in fileMapping)
+                {
+                    var file1 = filePair.Key;
+                    var file2 = filePair.Value;
+                    string file2FileType;
+                    string file2BasePath;
+                    string file2FileID;
+                    if (file2 == null)
+                    {
+                        file2FileType = "";
+                        file2BasePath = "";
+                        file2FileID = "";
+                    }
+                    else
+                    {
+                        file2FileType = file2.FileType.ToString();
+                        file2BasePath = file2.BasePath;
+                        file2FileID = file2.FileID;
+                    }
+                    var row = new CsvRow
+                    {
+                        file1.FileType.ToString(),
+                        file1.BasePath,
+                        file1.FileID,
+                        file2FileType,
+                        file2BasePath,
+                        file2FileID
+                    };
+                    writer.WriteRow(row);
+                }
+            }
+            
+        }
+    }
 }

@@ -31,12 +31,19 @@ namespace FileSynchronization
 
         public static void GetFileInformation(string path, out BY_HANDLE_FILE_INFORMATION info)
         {
-            using (FileStream file = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            if (File.Exists(path))
             {
-                if (!GetFileInformationByHandle(file.SafeFileHandle, out info))
+                using (FileStream file = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    throw new Win32Exception();
+                    if (!GetFileInformationByHandle(file.SafeFileHandle, out info))
+                    {
+                        throw new Win32Exception();
+                    }
                 }
+            }
+            else
+            {
+                throw new FileNotFoundException();
             }
         }
 
@@ -57,6 +64,9 @@ namespace FileSynchronization
 
         public static string GetCustomFileId(string path)
         {
+            // this method returns file ID that stays constant after file renaming, changing, moving within a single disk volume
+            // however, this file ID changes if file gets relocated to a different volume and does not regain a previous 
+            // value if returned back to original volume!!
             BY_HANDLE_FILE_INFORMATION info;
             GetFileInformation(path, out info);
             return info.FileIndexLow.ToString() + "-" + info.FileIndexHigh.ToString();

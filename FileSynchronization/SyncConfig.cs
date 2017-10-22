@@ -27,25 +27,9 @@ namespace FileSynchronization
         }
 
         
-        /*
-        private void SaveFileMappingToCsv(string fullPath, Dictionary<string, string> fileIDs)
-        {
-            // Write data to CSV file
-            using (var writer = new CsvFileWriter(fullPath))
-            {
-                foreach (var IDpair in fileIDs)
-                {
-                    var row = new CsvRow
-                    {
-                        IDpair.Key,
-                        IDpair.Value
-                    };
-                    writer.WriteRow(row);
-                }
-            }
-
-        }
-        */
+        
+        
+        
     }
 
     public class FileExtended
