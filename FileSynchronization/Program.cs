@@ -35,6 +35,7 @@ namespace FileSynchronization
 
             // initialize source and destination files:
             Init.InitializeFiles(confInstance);
+            Init.PopulateFileMapping(confInstance);
             return confInstance;
         }
     }

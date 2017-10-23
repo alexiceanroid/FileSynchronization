@@ -1,56 +1,99 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
+using System.Threading.Tasks;
 
 namespace FileSynchronization
 {
 
     internal static class Init
     {
-        private static int _filesProcessed = 0;
-        private static int _totalFilesCount = 0;
+        private static int _sourceFilesProcessed = 0;
+        private static int _totalSourceFilesCount = 0;
+        private static int _destFilesProcessed = 0;
+        private static int _totalDestFilesCount = 0;
         private static string _additonalMappingFromPaths = "No";
 
         internal static void InitializeFiles(SyncConfig confInstance)
         {
             var folderMappings = confInstance.FolderMappings;
+            var watchInitFiles = new Stopwatch();
+            var watchSourceFiles = new Stopwatch();
+            var watchDestFiles = new Stopwatch();
 
-
+            watchInitFiles.Start();
+            // count all files from source and destination:
             foreach (var pair in folderMappings)
             {
-                PopulateSourceFiles(confInstance, pair.Key);
-                PopulateDestinationFiles(confInstance, pair.Value);
+                _totalSourceFilesCount += Directory.GetFiles(pair.Key, "*.*", SearchOption.AllDirectories).Length;
+                _totalDestFilesCount += Directory.GetFiles(pair.Value, "*.*", SearchOption.AllDirectories).Length;
             }
 
-            PopulateFileMapping(confInstance);
+            Console.WriteLine("Starting populating source and destination files lists...");
+
+            Task[] populatingFilesTask = new Task[2];
+            populatingFilesTask[0] = Task.Factory.StartNew(() =>
+            {
+                watchSourceFiles.Start();
+                foreach (var pair in folderMappings)
+                {
+                    PopulateSourceFiles(confInstance, pair.Key);
+                }
+                watchSourceFiles.Stop();
+            }
+            );
+
+            populatingFilesTask[1] = Task.Factory.StartNew(() =>
+                {
+                    watchDestFiles.Start();
+                    foreach (var pair in folderMappings)
+                    {
+                        PopulateDestinationFiles(confInstance, pair.Value);
+                    }
+                    watchDestFiles.Stop();
+                }
+            );
+            Task.WaitAll(populatingFilesTask);
+            watchInitFiles.Stop();
+
+            
+            Console.WriteLine("Done:");
+            Console.WriteLine($"Elapsed time: {FormatTime(watchInitFiles.ElapsedMilliseconds)}\n");
+            Console.WriteLine($"\tprocessed {_sourceFilesProcessed} of {_totalSourceFilesCount} source files");
+            Console.WriteLine($"\telapsed time: {FormatTime(watchSourceFiles.ElapsedMilliseconds)}\n");
+            Console.WriteLine($"\tprocessed {_destFilesProcessed} of {_totalDestFilesCount} destination files");
+            Console.WriteLine($"\telapsed time: {FormatTime(watchDestFiles.ElapsedMilliseconds)}");
+
+        }
+
+        private static string FormatTime(long milliseconds)
+        {
+            TimeSpan timeSpan = TimeSpan.FromMilliseconds(milliseconds);
+            string timeString = $"{timeSpan.Hours} h {timeSpan.Minutes} min {timeSpan.Seconds} sec";
+            return timeString;
         }
 
         private static void PopulateDestinationFiles(SyncConfig confInstance, string destinationFolder)
         {
-            _filesProcessed = 0;
-            Console.WriteLine("Starting populating destination files list...");
+            
             PopulateFileLists(destinationFolder, confInstance.DestinationFiles,FileType.Destination);
-            Console.WriteLine("\nFinished populating destination files");
         }
 
         private static void PopulateSourceFiles(SyncConfig confInstance, string sourceFolder)
         {
-            Console.WriteLine("Starting populating source files list...");
             PopulateFileLists(sourceFolder, confInstance.SourceFiles,FileType.Source);
-            Console.WriteLine("\nFinished populating source files");
         }
 
         private static void PopulateFileLists(string path, List<FileExtended> fileInfos, FileType fileType)
         {
             string basePath = String.Copy(path);
             var fileList = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories);
-            _totalFilesCount = fileList.Length;
-
 
             foreach (var file in fileList)
             {
@@ -63,8 +106,14 @@ namespace FileSynchronization
                 fileExtended.BasePath = basePath;
 
                 fileInfos.Add(fileExtended);
-                _filesProcessed++;
-                Console.Write($"\r processed {_filesProcessed} of {_totalFilesCount} files    ");
+                if (fileType == FileType.Source)
+                {
+                    _sourceFilesProcessed++;
+                }
+                else
+                {
+                    _destFilesProcessed++;
+                }
             }
             
         }
@@ -132,8 +181,6 @@ namespace FileSynchronization
                         });
 
                         fileMapping.Add(sourceFileExtended, destFileExtended);
-                        _filesProcessed++;
-                        Console.Write($"\r additional files processed: {_filesProcessed}");
                     }
                     
                 }
@@ -162,8 +209,6 @@ namespace FileSynchronization
                         if (sourceFileExtended == null)
                         {
                             fileMapping.Add(destFileExtended, sourceFileExtended);
-                            _filesProcessed++;
-                            Console.Write($"\r additional files processed: {_filesProcessed}");
                         }
                     }
                 }
@@ -176,16 +221,22 @@ namespace FileSynchronization
             }
         }
 
-        private static void PopulateFileMapping(SyncConfig confInstance)
+        internal static void PopulateFileMapping(SyncConfig confInstance)
         {
+            var watchFileMapping = new Stopwatch();
+            Console.WriteLine("\nStarting preparing file mapping...");
+            watchFileMapping.Start();
             CSVHelper.PopulateFileMappingFromCsv(confInstance);
             
-            _filesProcessed = 0;
+            
             AddMissingFileMappingFromPaths(confInstance);
             if (_additonalMappingFromPaths == "Yes")
             {
                 CSVHelper.SaveFileMappingToCsv(confInstance);
             }
+            watchFileMapping.Stop();
+            Console.WriteLine("File mapping complete!");
+            Console.WriteLine($"\telapsed time: {FormatTime(watchFileMapping.ElapsedMilliseconds)}");
         }
     }
 }
