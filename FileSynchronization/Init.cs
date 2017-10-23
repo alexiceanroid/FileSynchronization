@@ -19,6 +19,8 @@ namespace FileSynchronization
         private static int _destFilesProcessed = 0;
         private static int _totalDestFilesCount = 0;
         private static string _additonalMappingFromPaths = "No";
+        
+        private static int _fileMappingCountPaths = 0;
 
         internal static void InitializeFiles(SyncConfig confInstance)
         {
@@ -41,6 +43,7 @@ namespace FileSynchronization
             populatingFilesTask[0] = Task.Factory.StartNew(() =>
             {
                 watchSourceFiles.Start();
+                confInstance.SourceFiles.Capacity = _totalSourceFilesCount;
                 foreach (var pair in folderMappings)
                 {
                     PopulateSourceFiles(confInstance, pair.Key);
@@ -52,6 +55,7 @@ namespace FileSynchronization
             populatingFilesTask[1] = Task.Factory.StartNew(() =>
                 {
                     watchDestFiles.Start();
+                    confInstance.DestinationFiles.Capacity = _totalDestFilesCount;
                     foreach (var pair in folderMappings)
                     {
                         PopulateDestinationFiles(confInstance, pair.Value);
@@ -64,15 +68,15 @@ namespace FileSynchronization
 
             
             Console.WriteLine("Done:");
-            Console.WriteLine($"Elapsed time: {FormatTime(watchInitFiles.ElapsedMilliseconds)}\n");
+            Console.WriteLine($"Elapsed time: {FormatTime(watchInitFiles.ElapsedMilliseconds)}");
             Console.WriteLine($"\tprocessed {_sourceFilesProcessed} of {_totalSourceFilesCount} source files");
-            Console.WriteLine($"\telapsed time: {FormatTime(watchSourceFiles.ElapsedMilliseconds)}\n");
+            Console.WriteLine($"\telapsed time: {FormatTime(watchSourceFiles.ElapsedMilliseconds)}");
             Console.WriteLine($"\tprocessed {_destFilesProcessed} of {_totalDestFilesCount} destination files");
             Console.WriteLine($"\telapsed time: {FormatTime(watchDestFiles.ElapsedMilliseconds)}");
 
         }
 
-        private static string FormatTime(long milliseconds)
+        public static string FormatTime(long milliseconds)
         {
             TimeSpan timeSpan = TimeSpan.FromMilliseconds(milliseconds);
             string timeString = $"{timeSpan.Hours} h {timeSpan.Minutes} min {timeSpan.Seconds} sec";
@@ -157,13 +161,17 @@ namespace FileSynchronization
 
         private static void AddMissingFileMappingFromPaths(SyncConfig confInstance)
         {
+            
+            
             if (confInstance.SourceFiles.Count > 0)
             {
+                var watchAddMissingFilesToMapping = new Stopwatch();
+                watchAddMissingFilesToMapping.Start();
                 var sourceFiles = confInstance.SourceFiles;
                 var destFiles = confInstance.DestinationFiles;
                 var fileMapping = confInstance.FileMapping;
 
-                Console.WriteLine("\nStarting populating FileMapping from paths:");
+                Console.WriteLine("\tStarting populating missing FileMapping from paths:");
                 foreach (var sourceFileExtended in sourceFiles)
                 {
                     // check if FileID of current sourceFileExtended already exists in fileMapping:
@@ -181,10 +189,11 @@ namespace FileSynchronization
                         });
 
                         fileMapping.Add(sourceFileExtended, destFileExtended);
+                        _fileMappingCountPaths++;
+                        Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
                     }
                     
                 }
-                Console.WriteLine("");
                 
                 foreach (var destFileExtended in destFiles)
                 {
@@ -209,10 +218,13 @@ namespace FileSynchronization
                         if (sourceFileExtended == null)
                         {
                             fileMapping.Add(destFileExtended, sourceFileExtended);
+                            _fileMappingCountPaths++;
+                            Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
                         }
                     }
                 }
-                Console.WriteLine("\n\nFinished populating FileMapping\n");
+                Console.WriteLine("\tfinished populating missing FileMapping from paths");
+                Console.WriteLine("\telapsed time: "+FormatTime(watchAddMissingFilesToMapping.ElapsedMilliseconds));
 
             }
             else
@@ -226,6 +238,7 @@ namespace FileSynchronization
             var watchFileMapping = new Stopwatch();
             Console.WriteLine("\nStarting preparing file mapping...");
             watchFileMapping.Start();
+            //confInstance.FileMapping
             CSVHelper.PopulateFileMappingFromCsv(confInstance);
             
             
@@ -236,7 +249,7 @@ namespace FileSynchronization
             }
             watchFileMapping.Stop();
             Console.WriteLine("File mapping complete!");
-            Console.WriteLine($"\telapsed time: {FormatTime(watchFileMapping.ElapsedMilliseconds)}");
+            Console.WriteLine($"elapsed time: {FormatTime(watchFileMapping.ElapsedMilliseconds)}");
         }
     }
 }

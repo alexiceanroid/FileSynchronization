@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
+using System.Security.AccessControl;
 using System.Text;
 
 namespace FileSynchronization
@@ -169,31 +171,60 @@ namespace FileSynchronization
         // <firstFileType>,<firstBasePath>,<firstFileId>,<secondFileType>,<secondBasePath>,<secondFileId>
         public static void PopulateFileMappingFromCsv(SyncConfig confInstance)
         {
-            var fileMapping = confInstance.FileMapping;
 
+            var linesRead = 0;
             if (File.Exists(fileMappingCsvLocation))
             {
+                var watchFileMappingFromCsv = new Stopwatch();
+                watchFileMappingFromCsv.Start();
+                var fileMapping = confInstance.FileMapping;
+                Console.WriteLine("\tpopulating filemapping from csv:");
                 // Read data from CSV file
-                using (CsvFileReader reader = new CsvFileReader(fileMappingCsvLocation))
+                try
                 {
-                    CsvRow row = new CsvRow();
-                    while (reader.ReadRow(row))
+                    using (CsvFileReader reader = new CsvFileReader(fileMappingCsvLocation))
                     {
-                        if (row.Count < 2 )
-                            break;
-                        var firstFileType = row[0];
-                        var firstBasePath = row[1];
-                        var firstFileId = row[2];
-                        var firstFileExtended = GetFileExendedFromCsvRow(firstFileType, firstBasePath, firstFileId);
+                        CsvRow row = new CsvRow();
+                        while (reader.ReadRow(row))
+                        {
+                            if (row.Count < 2)
+                                break;
+                            var firstFileType = row[0];
+                            var firstBasePath = row[1];
+                            var firstFileId = row[2];
+                            var firstFileExtended = GetFileExendedFromCsvRow(firstFileType, firstBasePath, firstFileId);
 
-                        var secondFileType = row[3];
-                        var secondBasePath = row[4];
-                        var secondFileId = row[5];
-                        var secondFileExtended = GetFileExendedFromCsvRow(secondFileType, secondBasePath, secondFileId);
+                            var secondFileType = row[3];
+                            var secondBasePath = row[4];
+                            var secondFileId = row[5];
+                            var secondFileExtended =
+                                GetFileExendedFromCsvRow(secondFileType, secondBasePath, secondFileId);
 
-                        confInstance.FileMapping.Add(firstFileExtended, secondFileExtended);
+                            confInstance.FileMapping.Add(firstFileExtended, secondFileExtended);
+                            linesRead++;
+                            Console.Write("\r\tlines read: " + linesRead);
+                        }
                     }
+                    Console.WriteLine("\tcompleted populating filemapping from csv");
                 }
+                catch (Exception ex)
+                {
+                    linesRead = 0;
+                    fileMapping.Clear();
+                    Console.WriteLine("\tcould not read the csv file: " + ex.Message);
+                    Console.WriteLine("\tclearing file mapping, proceeding with populating from paths...");
+                }
+                finally
+                {
+                    watchFileMappingFromCsv.Stop();
+                    Console.WriteLine("\tfile mapping lines read from csv: " + linesRead);
+                    Console.WriteLine("\telapsed time: " +
+                                      Init.FormatTime(watchFileMappingFromCsv.ElapsedMilliseconds));
+                }
+            }
+            else
+            {
+                Console.WriteLine("CSV file was not found, proceeding with populating from paths...");
             }
             
         }
@@ -234,6 +265,9 @@ namespace FileSynchronization
 
         public static void SaveFileMappingToCsv(SyncConfig confInstance)
         {
+            var watchSaveToCsv = new Stopwatch();
+            watchSaveToCsv.Start();
+            Console.WriteLine("\tsaving file mapping to CSV:");
             // Write data to CSV file
 
             var fileMapping = confInstance.FileMapping;
@@ -270,7 +304,9 @@ namespace FileSynchronization
                     writer.WriteRow(row);
                 }
             }
-            
+            Console.WriteLine("\tsaving to CSV completed");
+            watchSaveToCsv.Stop();
+            Console.WriteLine("\telapsed time: "+Init.FormatTime(watchSaveToCsv.ElapsedMilliseconds));
         }
     }
 }
