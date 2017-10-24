@@ -11,6 +11,7 @@ namespace FileSynchronization
     {
         public static string ResolvePath(string folderPath)
         {
+            
             string resPath;
             string volLetter;
             int volLabelendInd = folderPath.IndexOfAny(new char[] {':','\\'});
@@ -39,7 +40,15 @@ namespace FileSynchronization
             {
                 resPath = folderPath;
             }
+
+            if (!Directory.Exists(resPath))
+            {
+                throw new DirectoryNotFoundException();
+            }
+
             return resPath;
         }
+
+        
     }
 }

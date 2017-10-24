@@ -11,7 +11,7 @@ namespace FileSynchronization
     {
         // Process all files in the directory passed in, recurse on any directories 
         // that are found, and process the files they contain.
-        
+        /*
         public static void ProcessDirectory(string targetDirectory, List<FileExtended> fileInfos, string basePath, FileType fileType)
         {
             // Process the list of files found in the directory.
@@ -29,17 +29,18 @@ namespace FileSynchronization
         public static void ProcessFile(string path, List<FileExtended> fileInfos, string basePath, FileType fileType)
         {
             var filePath = String.Copy(path);
-            var fileExtended = new FileExtended();
+            var fileExtended = new FileExtended(
+                fileType,
+                basePath,
+                (new FileInfo(filePath)).LastWriteTime.ToString(),
+                Kernel32.GetCustomFileId(filePath)
+            );
 
-            fileExtended.FileType = fileType;
-            fileExtended.FileInfo = new FileInfo(filePath);
-            fileExtended.FileID = Kernel32.GetCustomFileId(filePath);
-            fileExtended.BasePath = basePath;
-            
             fileInfos.Add(fileExtended);
             //_filesProcessed++;
             //Console.Write($"\r processed {_filesProcessed} files    ");
         }
+        */
         
     }
 }

@@ -9,11 +9,11 @@ namespace FileSynchronization
     public class FilePairAction
     {
         private FileExtended _file1;
-        private FileExtended _file2;
+        private FileExtended? _file2;
         public ActionType actionType { get; set; }
         public Direction actionDirection { get; set; }
 
-        public FilePairAction(FileExtended file1, FileExtended file2)
+        public FilePairAction(FileExtended file1, FileExtended? file2)
         {
             this._file1 = file1;
             this._file2 = file2;
@@ -36,6 +36,9 @@ namespace FileSynchronization
     {
         Undefined,
         SourceToDestination,
-        DestinationToSource
+        DestinationToSource,
+        Both, // in case of delete
+        Source,
+        Destination
     }
 }

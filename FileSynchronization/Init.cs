@@ -102,14 +102,18 @@ namespace FileSynchronization
             foreach (var file in fileList)
             {
                 var filePath = String.Copy(file);
-                var fileExtended = new FileExtended();
-
-                fileExtended.FileType = fileType;
-                fileExtended.FileInfo = new FileInfo(filePath);
-                fileExtended.FileID = Kernel32.GetCustomFileId(filePath);
-                fileExtended.BasePath = basePath;
+                var fileInfo = new FileInfo(filePath);
+                var fileExtended = new FileExtended
+                (
+                    fileType,
+                    basePath,
+                    fileInfo.FullName,
+                    fileInfo.LastWriteTime.ToString(),
+                    Kernel32.GetCustomFileId(filePath)
+                );
 
                 fileInfos.Add(fileExtended);
+                /*
                 if (fileType == FileType.Source)
                 {
                     _sourceFilesProcessed++;
@@ -118,6 +122,7 @@ namespace FileSynchronization
                 {
                     _destFilesProcessed++;
                 }
+                */
             }
             
         }
@@ -131,6 +136,7 @@ namespace FileSynchronization
             {
                 var configReader = new AppSettingsReader();
                 string configLocation = (string)configReader.GetValue("ConfigFile", typeof(string));
+                confInstance.AppConfigLocation = configLocation;
 
 
                 XElement root = XElement.Load(configLocation);
@@ -174,52 +180,36 @@ namespace FileSynchronization
                 Console.WriteLine("\tStarting populating missing FileMapping from paths:");
                 foreach (var sourceFileExtended in sourceFiles)
                 {
-                    // check if FileID of current sourceFileExtended already exists in fileMapping:
-                    var sourcePresentFileID = fileMapping.Keys.FirstOrDefault(x => x.FileID == sourceFileExtended.FileID);
-                    if (sourcePresentFileID == null)
+                    // check if current sourceFileExtended already exists in fileMapping:
+                    // if it does not, then find a proper match in destination folder
+                    if (!fileMapping.ContainsKey(sourceFileExtended))
                     {
                         _additonalMappingFromPaths = "Yes";
-                        var sourceFilePath = sourceFileExtended.FileInfo.FullName;
-                        string sourceRelativePath =
-                            sourceFileExtended.FileInfo.FullName.Replace(sourceFileExtended.BasePath, "");
-                        var destFileExtended = destFiles.FirstOrDefault(x =>
-                        {
-                            string destRelativePath = x.FileInfo.FullName.Replace(x.BasePath, "");
-                            return sourceRelativePath == destRelativePath;
-                        });
+                        
 
-                        fileMapping.Add(sourceFileExtended, destFileExtended);
-                        _fileMappingCountPaths++;
-                        Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
+                        fileMapping.Add(sourceFileExtended, confInstance.GetFileMatch(sourceFileExtended));
+                        //_fileMappingCountPaths++;
+                        //Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
                     }
                     
                 }
                 
                 foreach (var destFileExtended in destFiles)
                 {
-                    // check if FileID of current destFileExtended already exists in fileMapping 
+                    // check if current destFileExtended already exists in fileMapping 
                     // (this time checking both keys and values)
-                    var destPresentFileIdLeft = fileMapping.Keys.FirstOrDefault(x => x.FileID == destFileExtended.FileID);
-                    var destPresentFileIdRight = fileMapping.Keys.FirstOrDefault(x => x.FileID == destFileExtended.FileID);
                     
                     // if it does not exist in keys and values then perform mapping based on paths:
-                    if (destPresentFileIdLeft == null && destPresentFileIdRight == null)
+                    if (!fileMapping.ContainsKey(destFileExtended) && !fileMapping.ContainsValue(destFileExtended))
                     {
                         _additonalMappingFromPaths = "Yes";
-                        var destFilePath = destFileExtended.FileInfo.FullName;
-                        string destRelativePath =
-                            destFileExtended.FileInfo.FullName.Replace(destFileExtended.BasePath, "");
-                        var sourceFileExtended = sourceFiles.FirstOrDefault(x =>
-                        {
-                            string sourceRelativePath = x.FileInfo.FullName.Replace(x.BasePath, "");
-                            return sourceRelativePath == destRelativePath;
-                        });
+                        var sourceFileExtended = confInstance.GetFileMatch(destFileExtended);
 
                         if (sourceFileExtended == null)
                         {
-                            fileMapping.Add(destFileExtended, sourceFileExtended);
-                            _fileMappingCountPaths++;
-                            Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
+                            fileMapping.Add(destFileExtended, null);
+                            //_fileMappingCountPaths++;
+                            //Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
                         }
                     }
                 }
@@ -238,13 +228,15 @@ namespace FileSynchronization
             var watchFileMapping = new Stopwatch();
             Console.WriteLine("\nStarting preparing file mapping...");
             watchFileMapping.Start();
-            //confInstance.FileMapping
+
             CSVHelper.PopulateFileMappingFromCsv(confInstance);
             
-            
-            AddMissingFileMappingFromPaths(confInstance);
-            if (_additonalMappingFromPaths == "Yes")
-            {
+            var csvLastWrite = (new FileInfo(confInstance.FileMappingCsvLocation)).LastWriteTime;
+            var appConfLastWrite = (new FileInfo(confInstance.AppConfigLocation)).LastWriteTime;
+
+            if(appConfLastWrite > csvLastWrite)
+            { 
+                AddMissingFileMappingFromPaths(confInstance);
                 CSVHelper.SaveFileMappingToCsv(confInstance);
             }
             watchFileMapping.Stop();

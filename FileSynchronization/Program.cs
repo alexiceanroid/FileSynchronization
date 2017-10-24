@@ -19,12 +19,12 @@ namespace FileSynchronization
         {
             
             var confInstance = PrepareSyncConfig();
-
+            
             var syncExec = new SyncExecution(confInstance);
 
             syncExec.PopulateActionList();
             
-            
+
 
         }
 

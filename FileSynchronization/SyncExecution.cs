@@ -19,6 +19,8 @@ namespace FileSynchronization
 
         public void PopulateActionList()
         {
+            var sourceFiles = _syncConfig.SourceFiles;
+            var destFiles = _syncConfig.DestinationFiles;
             var fileMapping = _syncConfig.FileMapping;
 
             foreach (var filePair in fileMapping)
@@ -28,10 +30,10 @@ namespace FileSynchronization
                 FilePairAction filePairAction = new FilePairAction(file1, file2);
 
                 // Action = Create
-                if (file2 == null)
+                if (!file2.HasValue)
                 {
                     filePairAction.actionType = ActionType.Create;
-                    if (file1.FileType == FileType.Source)
+                    if (file1.fileType == FileType.Source)
                     {
                         filePairAction.actionDirection = Direction.SourceToDestination;
                     }
@@ -44,25 +46,29 @@ namespace FileSynchronization
                 }
 
                 // Action = Rename
-                // this will be available after a first snapshot of FileMapping is captured in local database
+                
 
                 // Action = Move
                 // this will be available after a first snapshot of FileMapping is captured in local database
 
                 // Action = Delete
-                // this will be available after a first snapshot of FileMapping is captured in local database
+                var searchedFile1 = _syncConfig.GetFileById(file1.fileType, file1.fileID);
+                var searchedFile2 = _syncConfig.GetFileById(file2.Value.fileType, file2.Value.fileID);
+                //if(searchedFile1.fileID != null && searchedFile2.fileID == null)
+
+                
 
 
                 // Action = Update
-                DateTime file1LastUpdatedOn = file1.FileInfo.LastWriteTime;
-                DateTime file2LastUpdatedOn = file2.FileInfo.LastWriteTime;
+                DateTime file1LastUpdatedOn = DateTime.Parse(file1.lastWriteDateTime);
+                DateTime file2LastUpdatedOn = DateTime.Parse(file2.Value.lastWriteDateTime);
                 if (file1LastUpdatedOn.Date != file2LastUpdatedOn.Date
                     && file1LastUpdatedOn.TimeOfDay != file2LastUpdatedOn.TimeOfDay)
                 {
                     filePairAction.actionType = ActionType.Update;
                     if (file1LastUpdatedOn > file2LastUpdatedOn)
                     {
-                        if (file1.FileType == FileType.Source)
+                        if (file1.fileType == FileType.Source)
                         {
                             filePairAction.actionDirection = Direction.SourceToDestination;
                         }
@@ -73,7 +79,7 @@ namespace FileSynchronization
                     }
                     else
                     {
-                        if (file1.FileType == FileType.Source)
+                        if (file1.fileType == FileType.Source)
                         {
                             filePairAction.actionDirection = Direction.DestinationToSource;
                         }

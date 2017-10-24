@@ -175,6 +175,7 @@ namespace FileSynchronization
             var linesRead = 0;
             if (File.Exists(fileMappingCsvLocation))
             {
+                confInstance.FileMappingCsvLocation = fileMappingCsvLocation;
                 var watchFileMappingFromCsv = new Stopwatch();
                 watchFileMappingFromCsv.Start();
                 var fileMapping = confInstance.FileMapping;
@@ -184,28 +185,44 @@ namespace FileSynchronization
                 {
                     using (CsvFileReader reader = new CsvFileReader(fileMappingCsvLocation))
                     {
+                        var dummyD = new Dictionary<string, string>();
                         CsvRow row = new CsvRow();
                         while (reader.ReadRow(row))
                         {
                             if (row.Count < 2)
                                 break;
-                            var firstFileType = row[0];
+                            
+                            var firstFileType = (FileType)Enum.Parse(typeof(FileType), row[0]);
                             var firstBasePath = row[1];
                             var firstFileId = row[2];
-                            var firstFileExtended = GetFileExendedFromCsvRow(firstFileType, firstBasePath, firstFileId);
+                            var firstFileExtended = confInstance.GetFileById(firstFileType, firstFileId);
+
 
                             var secondFileType = row[3];
-                            var secondBasePath = row[4];
-                            var secondFileId = row[5];
-                            var secondFileExtended =
-                                GetFileExendedFromCsvRow(secondFileType, secondBasePath, secondFileId);
+                            var secondBasePath = row[4].Trim();
+                            var secondFileId = row[5].Trim();
+                            if(String.IsNullOrEmpty(secondFileType)
+                                ||
+                               String.IsNullOrEmpty(secondBasePath)
+                               ||
+                               String.IsNullOrEmpty(secondFileId)
+                                )
+                            {
+                                confInstance.FileMapping.Add(firstFileExtended, null);
+                            }
+                            else
+                            {
+                                var secondFileType2 = (FileType)Enum.Parse(typeof(FileType), row[3]);
+                                var secondFileExtended = confInstance.GetFileById(secondFileType2, secondFileId);
 
-                            confInstance.FileMapping.Add(firstFileExtended, secondFileExtended);
+                                confInstance.FileMapping.Add(firstFileExtended, secondFileExtended);
+                            }
+                            
                             linesRead++;
                             Console.Write("\r\tlines read: " + linesRead);
                         }
                     }
-                    Console.WriteLine("\tcompleted populating filemapping from csv");
+                    Console.WriteLine("\n\tcompleted populating filemapping from csv");
                 }
                 catch (Exception ex)
                 {
@@ -229,39 +246,7 @@ namespace FileSynchronization
             
         }
 
-        private static FileExtended GetFileExendedFromCsvRow(string fileType, string basePath, string fileId)
-        {
-            if (fileType == "" && basePath == "" && fileId == "")
-            {
-                return null;
-            }
-
-            string filePath="";
-            var allFilesList = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories);
-            foreach (var iteration_file in allFilesList)
-            {
-                var iteration_fileId = Kernel32.GetCustomFileId(iteration_file);
-                if (fileId == iteration_fileId)
-                {
-                    filePath = iteration_file;
-                }
-            }
-
-            FileExtended fileExtended;
-            if (!String.IsNullOrEmpty(filePath))
-            {
-                fileExtended = new FileExtended
-                {
-                    FileType = (FileType)Enum.Parse(typeof(FileType), fileType),
-                    FileInfo = new FileInfo(filePath),
-                    BasePath = basePath,
-                    FileID = Kernel32.GetCustomFileId(filePath)
-                };
-                return fileExtended;
-            }
-            return null;
-
-        }
+        
 
         public static void SaveFileMappingToCsv(SyncConfig confInstance)
         {
@@ -280,7 +265,7 @@ namespace FileSynchronization
                     string file2FileType;
                     string file2BasePath;
                     string file2FileID;
-                    if (file2 == null)
+                    if (!file2.HasValue)
                     {
                         file2FileType = "";
                         file2BasePath = "";
@@ -288,15 +273,15 @@ namespace FileSynchronization
                     }
                     else
                     {
-                        file2FileType = file2.FileType.ToString();
-                        file2BasePath = file2.BasePath;
-                        file2FileID = file2.FileID;
+                        file2FileType = file2.Value.fileType.ToString();
+                        file2BasePath = file2.Value.basePath;
+                        file2FileID = file2.Value.fileID;
                     }
                     var row = new CsvRow
                     {
-                        file1.FileType.ToString(),
-                        file1.BasePath,
-                        file1.FileID,
+                        file1.fileType.ToString(),
+                        file1.basePath,
+                        file1.fileID,
                         file2FileType,
                         file2BasePath,
                         file2FileID
