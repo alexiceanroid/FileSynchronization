@@ -135,7 +135,7 @@ namespace FileSynchronization
             try
             {
                 var configReader = new AppSettingsReader();
-                string configLocation = (string)configReader.GetValue("ConfigFile", typeof(string));
+                string configLocation = (string)configReader.GetValue("ConfigFile_"+Environment.MachineName, typeof(string));
                 confInstance.AppConfigLocation = configLocation;
 
 
@@ -230,11 +230,19 @@ namespace FileSynchronization
             watchFileMapping.Start();
 
             CSVHelper.PopulateFileMappingFromCsv(confInstance);
-            
-            var csvLastWrite = (new FileInfo(confInstance.FileMappingCsvLocation)).LastWriteTime;
-            var appConfLastWrite = (new FileInfo(confInstance.AppConfigLocation)).LastWriteTime;
 
-            if(appConfLastWrite > csvLastWrite)
+            bool csvExists = File.Exists(confInstance.FileMappingCsvLocation);
+            DateTime csvLastWrite = DateTime.MinValue;
+            DateTime appConfLastWrite = DateTime.MinValue;
+            if (csvExists)
+            {
+                csvLastWrite = (new FileInfo(confInstance.FileMappingCsvLocation)).LastWriteTime;
+                appConfLastWrite = (new FileInfo(confInstance.AppConfigLocation)).LastWriteTime;
+            }
+            
+
+            if(appConfLastWrite > csvLastWrite ||
+                !csvExists)
             { 
                 AddMissingFileMappingFromPaths(confInstance);
                 CSVHelper.SaveFileMappingToCsv(confInstance);

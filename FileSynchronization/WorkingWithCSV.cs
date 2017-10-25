@@ -164,7 +164,7 @@ namespace FileSynchronization
     {
         
         static readonly AppSettingsReader configReader = new AppSettingsReader();
-        private static readonly string fileMappingCsvFile = "FileID_mappings";
+        private static readonly string fileMappingCsvFile = "FileID_mappings_"+Environment.MachineName;
         static readonly string fileMappingCsvLocation = (string)configReader.GetValue(fileMappingCsvFile, typeof(string));
 
         // the assumption is that CSV file has the following structure:
