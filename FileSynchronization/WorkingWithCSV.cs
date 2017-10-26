@@ -169,7 +169,7 @@ namespace FileSynchronization
 
         // the assumption is that CSV file has the following structure:
         // <firstFileType>,<firstBasePath>,<firstFileId>,<secondFileType>,<secondBasePath>,<secondFileId>
-        public static void PopulateFileMappingFromCsv(SyncConfig confInstance)
+        public static void InitFileMappingFromCsv(SyncConfig confInstance)
         {
 
             var linesRead = 0;
@@ -178,7 +178,7 @@ namespace FileSynchronization
                 confInstance.FileMappingCsvLocation = fileMappingCsvLocation;
                 var watchFileMappingFromCsv = new Stopwatch();
                 watchFileMappingFromCsv.Start();
-                var fileMapping = confInstance.FileMapping;
+                var fileMapping = confInstance.FileMappingFromCsv;
                 Console.WriteLine("\tpopulating filemapping from csv:");
                 // Read data from CSV file
                 try

@@ -23,8 +23,9 @@ namespace FileSynchronization
             var syncExec = new SyncExecution(confInstance);
 
             syncExec.PopulateActionList();
+            syncExec.Start();
 
-
+            CSVHelper.SaveFileMappingToCsv(confInstance);
 
         }
 
@@ -35,7 +36,7 @@ namespace FileSynchronization
 
             // initialize source and destination files:
             Init.InitializeFiles(confInstance);
-            Init.PopulateFileMapping(confInstance);
+            Init.InitFileMapping(confInstance);
             return confInstance;
         }
     }

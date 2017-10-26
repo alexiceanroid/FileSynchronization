@@ -175,6 +175,7 @@ namespace FileSynchronization
                 watchAddMissingFilesToMapping.Start();
                 var sourceFiles = confInstance.SourceFiles;
                 var destFiles = confInstance.DestinationFiles;
+                var fileMappingFromPaths = confInstance.FileMappingFromPaths;
                 var fileMapping = confInstance.FileMapping;
 
                 Console.WriteLine("\tStarting populating missing FileMapping from paths:");
@@ -187,7 +188,7 @@ namespace FileSynchronization
                         _additonalMappingFromPaths = "Yes";
                         
 
-                        fileMapping.Add(sourceFileExtended, confInstance.GetFileMatch(sourceFileExtended));
+                        fileMappingFromPaths.Add(sourceFileExtended, confInstance.GetFileMatch(sourceFileExtended));
                         //_fileMappingCountPaths++;
                         //Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
                     }
@@ -207,13 +208,13 @@ namespace FileSynchronization
 
                         if (sourceFileExtended == null)
                         {
-                            fileMapping.Add(destFileExtended, null);
+                            fileMappingFromPaths.Add(destFileExtended, null);
                             //_fileMappingCountPaths++;
                             //Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
                         }
                     }
                 }
-                Console.WriteLine("\tfinished populating missing FileMapping from paths");
+                Console.WriteLine("\tfinished populating missing FileMapping from paths. Added " + fileMappingFromPaths.Count + " entries.");
                 Console.WriteLine("\telapsed time: "+FormatTime(watchAddMissingFilesToMapping.ElapsedMilliseconds));
 
             }
@@ -223,13 +224,13 @@ namespace FileSynchronization
             }
         }
 
-        internal static void PopulateFileMapping(SyncConfig confInstance)
+        internal static void InitFileMapping(SyncConfig confInstance)
         {
             var watchFileMapping = new Stopwatch();
             Console.WriteLine("\nStarting preparing file mapping...");
             watchFileMapping.Start();
 
-            CSVHelper.PopulateFileMappingFromCsv(confInstance);
+            CSVHelper.InitFileMappingFromCsv(confInstance);
 
             bool csvExists = File.Exists(confInstance.FileMappingCsvLocation);
             DateTime csvLastWrite = DateTime.MinValue;
@@ -245,7 +246,6 @@ namespace FileSynchronization
                 !csvExists)
             { 
                 AddMissingFileMappingFromPaths(confInstance);
-                CSVHelper.SaveFileMappingToCsv(confInstance);
             }
             watchFileMapping.Stop();
             Console.WriteLine("File mapping complete!");
