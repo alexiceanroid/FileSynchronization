@@ -15,8 +15,8 @@ namespace FileSynchronization
         public string FileMappingCsvLocation;
         public List<FileExtended> SourceFiles { get; set; }
         public List<FileExtended> DestinationFiles { get; set; }
-        public Dictionary<FileExtended, FileExtended?> FileMappingFromCsv { get; set; }
-        public Dictionary<FileExtended, FileExtended?> FileMappingFromPaths { get; set; }
+        public Dictionary<FileExtended, FileExtended> FileMappingFromCsv { get; set; }
+        public Dictionary<FileExtended, FileExtended> FileMappingFromPaths { get; set; }
 
         public Dictionary<string, string> FolderMappings;
 
@@ -25,12 +25,13 @@ namespace FileSynchronization
             FolderMappings = new Dictionary<string, string>();
             SourceFiles = new List<FileExtended>();
             DestinationFiles = new List<FileExtended>();
-            FileMappingFromCsv = new Dictionary<FileExtended, FileExtended?>();
-            FileMappingFromPaths = new Dictionary<FileExtended, FileExtended?>();
+            FileMappingFromCsv = new Dictionary<FileExtended, FileExtended>();
+            FileMappingFromPaths = new Dictionary<FileExtended, FileExtended>();
         }
 
-        public Dictionary<FileExtended, FileExtended?> FileMapping => 
-            (Dictionary<FileExtended, FileExtended?>) FileMappingFromCsv.Union(FileMappingFromPaths);
+        public Dictionary<FileExtended, FileExtended> FileMapping =>
+            //(Dictionary<FileExtended, FileExtended>) 
+            FileMappingFromCsv.Union(FileMappingFromPaths).ToDictionary(s => s.Key, s => s.Value);
 
         public bool FilesMatchBasedOnPaths(FileExtended f1, FileExtended f2)
         {
@@ -63,9 +64,9 @@ namespace FileSynchronization
             return filesMatch;
         }
 
-        public FileExtended? GetFileMatch(FileExtended f)
+        public FileExtended GetFileMatch(FileExtended f)
         {
-            FileExtended? resultingFile = null;
+            FileExtended resultingFile = null;
             List<FileExtended> filesListToSearch;
             filesListToSearch = f.fileType == FileType.Source ? DestinationFiles : SourceFiles;
             

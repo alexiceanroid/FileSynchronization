@@ -50,6 +50,7 @@
     <Compile Include="FileExtended.cs" />
     <Compile Include="FilePairAction.cs" />
     <Compile Include="Kernel32.cs" />
+    <Compile Include="SyncActionHelper.cs" />
     <Compile Include="SyncConfig.cs" />
     <Compile Include="Init.cs" />
     <Compile Include="Program.cs" />
@@ -57,6 +58,7 @@
     <Compile Include="SyncExecution.cs" />
     <Compile Include="SyncExecutionHelper.cs" />
     <Compile Include="WorkingWithCSV.cs" />
+    <Compile Include="WorkingWithFiles.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

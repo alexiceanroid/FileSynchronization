@@ -8,7 +8,7 @@ namespace FileSynchronization
         Destination
     }
 
-    public struct FileExtended
+    public class FileExtended
         {
             public readonly FileType fileType;
             public readonly string basePath;
@@ -25,7 +25,11 @@ namespace FileSynchronization
                 fileID = _fileId;
             }
 
-            public string RelativePath
+        public FileExtended()
+        {
+        }
+
+        public string RelativePath
             {
                 get
                 {

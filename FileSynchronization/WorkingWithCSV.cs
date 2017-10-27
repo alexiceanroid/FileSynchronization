@@ -265,7 +265,7 @@ namespace FileSynchronization
                     string file2FileType;
                     string file2BasePath;
                     string file2FileID;
-                    if (!file2.HasValue)
+                    if (file2 == null)
                     {
                         file2FileType = "";
                         file2BasePath = "";
@@ -273,9 +273,9 @@ namespace FileSynchronization
                     }
                     else
                     {
-                        file2FileType = file2.Value.fileType.ToString();
-                        file2BasePath = file2.Value.basePath;
-                        file2FileID = file2.Value.fileID;
+                        file2FileType = file2.fileType.ToString();
+                        file2BasePath = file2.basePath;
+                        file2FileID = file2.fileID;
                     }
                     var row = new CsvRow
                     {

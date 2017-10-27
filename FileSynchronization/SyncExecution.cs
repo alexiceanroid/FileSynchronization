@@ -10,8 +10,8 @@ namespace FileSynchronization
     public partial class SyncExecution
     {
         private List<FilePairAction> _actionList;
-        private Dictionary<FileExtended, FileExtended?> _mappingToRemove;
-        private Dictionary<FileExtended, FileExtended?> _mappingToAdd;
+        private Dictionary<FileExtended, FileExtended> _mappingToRemove;
+        private Dictionary<FileExtended, FileExtended> _mappingToAdd;
         private List<FileExtended> _sourceFilesNew;
         private List<FileExtended> _destFilesNew;
         private readonly SyncConfig _syncConfig;
@@ -20,8 +20,8 @@ namespace FileSynchronization
         {
             this._syncConfig = _syncConfig;
             _actionList = new List<FilePairAction>();
-            _mappingToAdd = new Dictionary<FileExtended, FileExtended?>();
-            _mappingToRemove = new Dictionary<FileExtended, FileExtended?>();
+            _mappingToAdd = new Dictionary<FileExtended, FileExtended>();
+            _mappingToRemove = new Dictionary<FileExtended, FileExtended>();
             _sourceFilesNew = new List<FileExtended>();
             _destFilesNew = new List<FileExtended>();
         }
@@ -30,19 +30,19 @@ namespace FileSynchronization
             => 
             _syncConfig.FileMappingFromCsv.Keys.ToList();
 
-        public List<FileExtended?> MappingValues
+        public List<FileExtended> MappingValues
             =>
                 _syncConfig.FileMappingFromCsv.Values.ToList();
 
-        public Dictionary<FileExtended, FileExtended?> FileMapping
+        public Dictionary<FileExtended, FileExtended> FileMapping
             =>
                 _syncConfig.FileMapping;
 
-        public Dictionary<FileExtended, FileExtended?> FileMappingFromCsv
+        public Dictionary<FileExtended, FileExtended> FileMappingFromCsv
             =>
                 _syncConfig.FileMappingFromCsv;
 
-        public Dictionary<FileExtended, FileExtended?> FileMappingFromPaths
+        public Dictionary<FileExtended, FileExtended> FileMappingFromPaths
             =>
                 _syncConfig.FileMappingFromPaths;
 
@@ -61,12 +61,21 @@ namespace FileSynchronization
 
         private void PopulateNewFiles()
         {
-            List<FileExtended> mappingKeys = FileMappingFromCsv.Keys.ToList();
-            List<FileExtended> mappingValues = (List<FileExtended>)FileMappingFromCsv.Values.Where(x => x.HasValue);
-            
-            _sourceFilesNew = SourceFiles.Except(mappingKeys).ToList();
-            _destFilesNew = DestFiles.Except(mappingKeys).ToList();
-            _destFilesNew = _destFilesNew.Except(mappingValues).ToList();
+            if (FileMappingFromCsv.Count > 0)
+            {
+                List<FileExtended> mappingKeys = FileMappingFromCsv.Keys.ToList();
+                List<FileExtended> mappingValues = new List<FileExtended>();
+
+                var mappingValuesCollection = FileMappingFromCsv.Values.Where(x => x != null);
+                foreach (var mappingValue in mappingValuesCollection)
+                {
+                    mappingValues.Add(mappingValue);
+                }
+
+                _sourceFilesNew = SourceFiles.Except(mappingKeys).ToList();
+                _destFilesNew = DestFiles.Except(mappingKeys).ToList();
+                _destFilesNew = _destFilesNew.Except(mappingValues).ToList();
+            }
         }
 
         
@@ -79,13 +88,16 @@ namespace FileSynchronization
             {
                 FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value);
                 
+                
                 bool create = CreateMarkForPaths(filePairAction);
                 if (create)
                     continue;
                 
+                
                 bool update = UpdateMark(filePairAction);
                 if (update)
                     continue;
+                
                 
                 MarkAsEqualForPaths(filePairAction);
             }
@@ -124,7 +136,27 @@ namespace FileSynchronization
         
         public void Start()
         {
-            throw new NotImplementedException();
+            foreach (var action in _actionList)
+            {
+                switch (action.actionType)
+                {
+                    case ActionType.Create:
+                        ActionCreate(action);
+                        break;
+                        /*
+                    case ActionType.Update:
+                        ActionUpdate(action);
+                        break;
+                    case ActionType.None:
+                        UpdateFileMapping(action);
+                        break;
+                        */
+                    default:
+                        throw new Exception("Invalid file pair action: " + action.actionType);
+                }
+            }
         }
+
+        
     }
 }

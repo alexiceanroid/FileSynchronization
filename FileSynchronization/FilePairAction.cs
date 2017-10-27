@@ -9,11 +9,11 @@ namespace FileSynchronization
     public class FilePairAction
     {
         public FileExtended _file1;
-        public FileExtended? _file2;
+        public FileExtended _file2;
         public ActionType actionType { get; set; }
         public Direction actionDirection { get; set; }
 
-        public FilePairAction(FileExtended file1, FileExtended? file2)
+        public FilePairAction(FileExtended file1, FileExtended file2)
         {
             this._file1 = file1;
             this._file2 = file2;

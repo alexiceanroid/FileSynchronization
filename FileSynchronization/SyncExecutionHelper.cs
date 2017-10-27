@@ -19,7 +19,7 @@ namespace FileSynchronization
         {
             bool res = false;
             // Action = Create
-            if (!filePairAction._file2.HasValue)
+            if (filePairAction._file2 == null)
             {
                 res = true;
                 filePairAction.actionType = ActionType.Create;
@@ -46,9 +46,9 @@ namespace FileSynchronization
             var file2 = filePairAction._file2;
 
             file1IsNew = NewFiles.Contains(file1);
-            if (file2.HasValue)
+            if (file2 != null)
             {
-                file2IsNew = NewFiles.Contains(file2.Value);
+                file2IsNew = NewFiles.Contains(file2);
             }
 
             if (file1IsNew && !(file2IsNew))
@@ -66,7 +66,7 @@ namespace FileSynchronization
             else if (!(file1IsNew) && file2IsNew)
             {
                 res = true;
-                if (file2.Value.fileType == FileType.Source)
+                if (file2.fileType == FileType.Source)
                 {
                     filePairAction.actionDirection = Direction.SourceToDestination;
                 }
@@ -93,7 +93,7 @@ namespace FileSynchronization
             var file2 = filePairAction._file2;
             // Action = Update
             DateTime file1LastUpdatedOn = DateTime.Parse(file1.lastWriteDateTime);
-            DateTime file2LastUpdatedOn = DateTime.Parse(file2.Value.lastWriteDateTime);
+            DateTime file2LastUpdatedOn = DateTime.Parse(file2.lastWriteDateTime);
             if (file1LastUpdatedOn.Date != file2LastUpdatedOn.Date
                 || file1LastUpdatedOn.TimeOfDay != file2LastUpdatedOn.TimeOfDay)
             {
@@ -136,7 +136,7 @@ namespace FileSynchronization
             var file1 = filePairAction._file1;
             var file2 = filePairAction._file2;
             var searchedFile1 = _syncConfig.GetFileById(file1.fileType, file1.fileID);
-            var searchedFile2 = _syncConfig.GetFileById(file2.Value.fileType, file2.Value.fileID);
+            var searchedFile2 = _syncConfig.GetFileById(file2.fileType, file2.fileID);
             if (searchedFile1.fileID == null && searchedFile2.fileID != null)
             {
                 filePairAction.actionType = ActionType.Delete;
@@ -164,7 +164,7 @@ namespace FileSynchronization
             {
                 string mes = "The actions list already contains this file combination:\n" +
                              "\t source file:      " + filePairAction._file1.fullPath + "\n" +
-                             "\t destination file: " + filePairAction._file2.Value.fullPath + "\n" +
+                             "\t destination file: " + filePairAction._file2.fullPath + "\n" +
                              "\t " + filePairAction.actionType + ", " + filePairAction.actionDirection;
 
                 throw new Exception(mes);
