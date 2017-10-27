@@ -8,11 +8,11 @@ namespace FileSynchronization
 {
     public partial class SyncExecution
     {
-        private void MarkAsEqual(FilePairAction filePairAction)
+        private void MarkAsEqualForPaths(FilePairAction filePairAction)
         {
             filePairAction.actionDirection = Direction.None;
             filePairAction.actionType = ActionType.None;
-            _actionList.Add(filePairAction);
+            AddFilePairWithCheck(filePairAction);
         }
 
         private bool CreateMarkForPaths(FilePairAction filePairAction)
@@ -31,12 +31,61 @@ namespace FileSynchronization
                 {
                     filePairAction.actionDirection = Direction.DestinationToSource;
                 }
-                _actionList.Add(filePairAction);
+                AddFilePairWithCheck(filePairAction);
             }
             return res;
         }
 
-        
+        private bool CreateMarkForCsv(FilePairAction filePairAction)
+        {
+            bool res = false;
+            bool file1IsNew;
+            bool file2IsNew = false;
+
+            var file1 = filePairAction._file1;
+            var file2 = filePairAction._file2;
+
+            file1IsNew = NewFiles.Contains(file1);
+            if (file2.HasValue)
+            {
+                file2IsNew = NewFiles.Contains(file2.Value);
+            }
+
+            if (file1IsNew && !(file2IsNew))
+            {
+                res = true;
+                if (file1.fileType == FileType.Source)
+                {
+                    filePairAction.actionDirection = Direction.SourceToDestination;
+                }
+                else
+                {
+                    filePairAction.actionDirection = Direction.DestinationToSource;
+                }
+            }
+            else if (!(file1IsNew) && file2IsNew)
+            {
+                res = true;
+                if (file2.Value.fileType == FileType.Source)
+                {
+                    filePairAction.actionDirection = Direction.SourceToDestination;
+                }
+                else
+                {
+                    filePairAction.actionDirection = Direction.DestinationToSource;
+                }
+            }
+
+            if (res)
+            {
+                filePairAction.actionType = ActionType.Create;
+                AddFilePairWithCheck(filePairAction);
+            }
+
+            return res;
+        }
+
+
         private bool UpdateMark(FilePairAction filePairAction)
         {
             bool res = false;
@@ -72,7 +121,7 @@ namespace FileSynchronization
                         filePairAction.actionDirection = Direction.SourceToDestination;
                     }
                 }
-                _actionList.Add(filePairAction);
+                AddFilePairWithCheck(filePairAction);
             }
             return res;
         }
@@ -96,15 +145,31 @@ namespace FileSynchronization
             return res;
         }
 
-        private bool CreateMarkForCsv(FilePairAction filePairAction)
+        
+
+        private bool RenameMark(FilePairAction filePairAction)
         {
             bool res = false;
 
-            foreach (var sourceFile in _syncConfig.SourceFiles)
-            {
-                bool isPresentInMapping = _syncConfig.FileMappingFromCsv.ContainsKey(sourceFile)
-            }
+            var file1 = filePairAction._file1;
+            var file2 = filePairAction._file2;
+
+
             return res;
+        }
+
+        private void AddFilePairWithCheck(FilePairAction filePairAction)
+        {
+            if (_actionList.Contains(filePairAction))
+            {
+                string mes = "The actions list already contains this file combination:\n" +
+                             "\t source file:      " + filePairAction._file1.fullPath + "\n" +
+                             "\t destination file: " + filePairAction._file2.Value.fullPath + "\n" +
+                             "\t " + filePairAction.actionType + ", " + filePairAction.actionDirection;
+
+                throw new Exception(mes);
+            }
+            _actionList.Add(filePairAction);
         }
     }
 }

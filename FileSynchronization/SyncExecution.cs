@@ -12,6 +12,8 @@ namespace FileSynchronization
         private List<FilePairAction> _actionList;
         private Dictionary<FileExtended, FileExtended?> _mappingToRemove;
         private Dictionary<FileExtended, FileExtended?> _mappingToAdd;
+        private List<FileExtended> _sourceFilesNew;
+        private List<FileExtended> _destFilesNew;
         private readonly SyncConfig _syncConfig;
 
         public SyncExecution(SyncConfig _syncConfig)
@@ -20,16 +22,60 @@ namespace FileSynchronization
             _actionList = new List<FilePairAction>();
             _mappingToAdd = new Dictionary<FileExtended, FileExtended?>();
             _mappingToRemove = new Dictionary<FileExtended, FileExtended?>();
+            _sourceFilesNew = new List<FileExtended>();
+            _destFilesNew = new List<FileExtended>();
         }
+        #region Properties from SyncConfig
+        public List<FileExtended> MappingKeys 
+            => 
+            _syncConfig.FileMappingFromCsv.Keys.ToList();
+
+        public List<FileExtended?> MappingValues
+            =>
+                _syncConfig.FileMappingFromCsv.Values.ToList();
+
+        public Dictionary<FileExtended, FileExtended?> FileMapping
+            =>
+                _syncConfig.FileMapping;
+
+        public Dictionary<FileExtended, FileExtended?> FileMappingFromCsv
+            =>
+                _syncConfig.FileMappingFromCsv;
+
+        public Dictionary<FileExtended, FileExtended?> FileMappingFromPaths
+            =>
+                _syncConfig.FileMappingFromPaths;
+
+        public List<FileExtended> SourceFiles
+            =>
+                _syncConfig.SourceFiles;
+
+        public List<FileExtended> DestFiles
+            =>
+                _syncConfig.DestinationFiles;
+        #endregion
+
+        public List<FileExtended> NewFiles
+            => (_sourceFilesNew.Union(_destFilesNew)).ToList();
+
+
+        private void PopulateNewFiles()
+        {
+            List<FileExtended> mappingKeys = FileMappingFromCsv.Keys.ToList();
+            List<FileExtended> mappingValues = (List<FileExtended>)FileMappingFromCsv.Values.Where(x => x.HasValue);
+            
+            _sourceFilesNew = SourceFiles.Except(mappingKeys).ToList();
+            _destFilesNew = DestFiles.Except(mappingKeys).ToList();
+            _destFilesNew = _destFilesNew.Except(mappingValues).ToList();
+        }
+
+        
 
         public void PopulateActionList()
         {
-            var sourceFiles = _syncConfig.SourceFiles;
-            var destFiles = _syncConfig.DestinationFiles;
-            var fileMappingFromPaths = _syncConfig.FileMappingFromPaths;
-            var fileMappingFromCsv = _syncConfig.FileMappingFromCsv;
+            PopulateNewFiles();
 
-            foreach (var filePair in fileMappingFromPaths)
+            foreach (var filePair in FileMappingFromPaths)
             {
                 FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value);
                 
@@ -41,10 +87,10 @@ namespace FileSynchronization
                 if (update)
                     continue;
                 
-                MarkAsEqual(filePairAction);
+                MarkAsEqualForPaths(filePairAction);
             }
 
-            foreach (var filePair in fileMappingFromCsv)
+            foreach (var filePair in FileMappingFromCsv)
             {
                 FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value);
 
@@ -60,17 +106,18 @@ namespace FileSynchronization
                 bool rename = RenameMark(filePairAction);
                 if (rename)
                     continue;
-
+                /*
                 bool move = MoveMark(filePairAction);
                 if (move)
                     continue;
+                    */
 
                 bool delete = DeleteMark(filePairAction);
                 if (delete)
                     continue;
 
 
-                MarkAsEqual(filePairAction);
+                MarkAsEqualForPaths(filePairAction);
             }
         }
 
