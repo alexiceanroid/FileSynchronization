@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -108,7 +109,7 @@ namespace FileSynchronization
                     fileType,
                     basePath,
                     fileInfo.FullName,
-                    fileInfo.LastWriteTime.ToString(),
+                    fileInfo.LastWriteTime.ToString(CultureInfo.InvariantCulture),
                     Kernel32.GetCustomFileId(filePath)
                 );
 

@@ -16,7 +16,8 @@ namespace FileSynchronization
             public readonly string lastWriteDateTime;
             public readonly string fileID;
 
-            public FileExtended(FileType _fileType, string _basePath, string _fullPath, string _lastWriteDate, string _fileId)
+            public FileExtended(FileType _fileType, string _basePath, 
+                string _fullPath, string _lastWriteDate, string _fileId)
             {
                 fileType = _fileType;
                 basePath = _basePath;

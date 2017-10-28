@@ -32,7 +32,7 @@ namespace FileSynchronization
             var fileExtended = new FileExtended(
                 fileType,
                 basePath,
-                (new FileInfo(filePath)).LastWriteTime.ToString(),
+                (new FileInfo(filePath)).LastWriteTime.ToString(CultureInfo.InvariantCulture),
                 Kernel32.GetCustomFileId(filePath)
             );
 

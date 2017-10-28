@@ -138,21 +138,28 @@ namespace FileSynchronization
         {
             foreach (var action in _actionList)
             {
+                var filesDict = GetSourceAndDestFile(action);
+                string sourceFile = filesDict[FileType.Source];
+                string destFile = filesDict[FileType.Destination];
+
                 switch (action.actionType)
                 {
+
                     case ActionType.Create:
-                        ActionCreate(action);
+                        ActionCreate(sourceFile,destFile,action.actionDirection);
+                        break;
+                        
+                    case ActionType.Update:
+                        ActionUpdate(sourceFile, destFile, action.actionDirection);
                         break;
                         /*
-                    case ActionType.Update:
-                        ActionUpdate(action);
-                        break;
                     case ActionType.None:
                         UpdateFileMapping(action);
                         break;
-                        */
+                        
                     default:
                         throw new Exception("Invalid file pair action: " + action.actionType);
+                        */
                 }
             }
         }

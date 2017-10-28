@@ -84,7 +84,6 @@ namespace FileSynchronization
 
         public FileExtended GetFileById(FileType fileType, string id)
         {
-            FileExtended resultingFile = new FileExtended();
             List<FileExtended> listToSearch;
             switch (fileType)
             {
@@ -102,11 +101,32 @@ namespace FileSynchronization
             {
                 if (file.fileID == id)
                 {
-                    resultingFile = file;
+                    return file;
                 }
             }
 
-            return resultingFile;
+            return null;
+        }
+
+        public FileExtended GetFileByFullPath(string fullPath)
+        {
+            foreach (var file in SourceFiles)
+            {
+                if (file.fullPath == fullPath)
+                {
+                    return file;
+                }
+            }
+
+            foreach (var file in DestinationFiles)
+            {
+                if (file.fullPath == fullPath)
+                {
+                    return file;
+                }
+            }
+
+            return null;
         }
         
         
