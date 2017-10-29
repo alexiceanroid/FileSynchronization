@@ -69,7 +69,9 @@ namespace FileSynchronization
             // value if returned back to original volume!!
             BY_HANDLE_FILE_INFORMATION info;
             GetFileInformation(path, out info);
-            return info.FileIndexLow.ToString() + "-" + info.FileIndexHigh.ToString();
+            return   info.FileIndexLow.ToString() + info.FileIndexHigh.ToString();
         }
+
+
     }
 }

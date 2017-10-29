@@ -12,8 +12,8 @@ namespace FileSynchronization
         private List<FilePairAction> _actionList;
         private Dictionary<FileExtended, FileExtended> _mappingToRemove;
         private Dictionary<FileExtended, FileExtended> _mappingToAdd;
-        private List<FileExtended> _sourceFilesNew;
-        private List<FileExtended> _destFilesNew;
+        //private List<FileExtended> _sourceFilesNew;
+        //private List<FileExtended> _destFilesNew;
         private readonly SyncConfig _syncConfig;
 
         public SyncExecution(SyncConfig _syncConfig)
@@ -22,8 +22,8 @@ namespace FileSynchronization
             _actionList = new List<FilePairAction>();
             _mappingToAdd = new Dictionary<FileExtended, FileExtended>();
             _mappingToRemove = new Dictionary<FileExtended, FileExtended>();
-            _sourceFilesNew = new List<FileExtended>();
-            _destFilesNew = new List<FileExtended>();
+            //_sourceFilesNew = new List<FileExtended>();
+            //_destFilesNew = new List<FileExtended>();
         }
         #region Properties from SyncConfig
         public List<FileExtended> MappingKeys 
@@ -55,10 +55,7 @@ namespace FileSynchronization
                 _syncConfig.DestinationFiles;
         #endregion
 
-        public List<FileExtended> NewFiles
-            => (_sourceFilesNew.Union(_destFilesNew)).ToList();
-
-
+        /*
         private void PopulateNewFiles()
         {
             if (FileMappingFromCsv.Count > 0)
@@ -77,12 +74,12 @@ namespace FileSynchronization
                 _destFilesNew = _destFilesNew.Except(mappingValues).ToList();
             }
         }
-
+        */
         
 
         public void PopulateActionList()
         {
-            PopulateNewFiles();
+            //PopulateNewFiles();
 
             foreach (var filePair in FileMappingFromPaths)
             {
@@ -106,28 +103,30 @@ namespace FileSynchronization
             {
                 FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value);
 
-
+                /*
                 bool create = CreateMarkForCsv(filePairAction);
                 if (create)
                     continue;
-                
+                */
+
                 bool update = UpdateMark(filePairAction);
                 if (update)
                     continue;
-
+                
                 bool rename = RenameMark(filePairAction);
                 if (rename)
                     continue;
                 /*
+                
                 bool move = MoveMark(filePairAction);
                 if (move)
                     continue;
-                    */
+                    
 
                 bool delete = DeleteMark(filePairAction);
                 if (delete)
                     continue;
-
+                   */
 
                 MarkAsEqualForPaths(filePairAction);
             }
@@ -148,18 +147,18 @@ namespace FileSynchronization
                     case ActionType.Create:
                         ActionCreate(sourceFile,destFile,action.actionDirection);
                         break;
-                        
-                    case ActionType.Update:
-                        ActionUpdate(sourceFile, destFile, action.actionDirection);
-                        break;
-                        /*
-                    case ActionType.None:
-                        UpdateFileMapping(action);
-                        break;
-                        
-                    default:
-                        throw new Exception("Invalid file pair action: " + action.actionType);
-                        */
+                    
+                case ActionType.Update:
+                    ActionUpdate(sourceFile, destFile, action.actionDirection);
+                    break;
+                    /*
+                case ActionType.None:
+                    UpdateFileMapping(action);
+                    break;
+                    
+                default:
+                    throw new Exception("Invalid file pair action: " + action.actionType);
+                    */
                 }
             }
         }

@@ -104,7 +104,31 @@ namespace FileSynchronization
 
         private void ActionUpdate(string sourceFile, string destFile, Direction actionDirection)
         {
-            
+            string file1, file2;
+            try
+            {
+                switch (actionDirection)
+                {
+                    case Direction.SourceToDestination:
+                        Console.WriteLine();
+                        file1 = sourceFile;
+                        file2 = destFile;
+                        break;
+                    case Direction.DestinationToSource:
+                        file1 = destFile;
+                        file2 = sourceFile;
+                        break;
+                    default:
+                        throw new Exception("Invalid action direction!");
+                }
+
+                File.Copy(file1,file2, true);
+                
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error occured during update operation: \n" + ex.Message);
+            }
         }
 
         private Dictionary<FileType,string> GetSourceAndDestFile(FilePairAction action)

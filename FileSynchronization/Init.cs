@@ -70,10 +70,10 @@ namespace FileSynchronization
             
             Console.WriteLine("Done:");
             Console.WriteLine($"Elapsed time: {FormatTime(watchInitFiles.ElapsedMilliseconds)}");
-            Console.WriteLine($"\tprocessed {_sourceFilesProcessed} of {_totalSourceFilesCount} source files");
-            Console.WriteLine($"\telapsed time: {FormatTime(watchSourceFiles.ElapsedMilliseconds)}");
-            Console.WriteLine($"\tprocessed {_destFilesProcessed} of {_totalDestFilesCount} destination files");
-            Console.WriteLine($"\telapsed time: {FormatTime(watchDestFiles.ElapsedMilliseconds)}");
+            //Console.WriteLine($"\tprocessed {_sourceFilesProcessed} of {_totalSourceFilesCount} source files");
+            //Console.WriteLine($"\telapsed time: {FormatTime(watchSourceFiles.ElapsedMilliseconds)}");
+            //Console.WriteLine($"\tprocessed {_destFilesProcessed} of {_totalDestFilesCount} destination files");
+            //Console.WriteLine($"\telapsed time: {FormatTime(watchDestFiles.ElapsedMilliseconds)}");
 
         }
 
@@ -179,43 +179,22 @@ namespace FileSynchronization
                 var fileMappingFromPaths = confInstance.FileMappingFromPaths;
                 var fileMapping = confInstance.FileMapping;
 
+                Console.WriteLine();
                 Console.WriteLine("\tStarting populating missing FileMapping from paths:");
-                foreach (var sourceFileExtended in sourceFiles)
+                foreach (var missingFile in confInstance.FilesMissingInMapping)
                 {
-                    // check if current sourceFileExtended already exists in fileMapping:
-                    // if it does not, then find a proper match in destination folder
-                    if (!fileMapping.ContainsKey(sourceFileExtended))
-                    {
-                        _additonalMappingFromPaths = "Yes";
+                    _additonalMappingFromPaths = "Yes";
                         
+                    fileMappingFromPaths.Add(missingFile, confInstance.GetFileCounterpart(missingFile));
+                    _fileMappingCountPaths++;
+                    Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
 
-                        fileMappingFromPaths.Add(sourceFileExtended, confInstance.GetFileMatch(sourceFileExtended));
-                        //_fileMappingCountPaths++;
-                        //Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
-                    }
-                    
+                    if (confInstance.FilesMissingInMapping.Count == 0)
+                        break;
                 }
                 
-                foreach (var destFileExtended in destFiles)
-                {
-                    // check if current destFileExtended already exists in fileMapping 
-                    // (this time checking both keys and values)
-                    
-                    // if it does not exist in keys and values then perform mapping based on paths:
-                    if (!fileMapping.ContainsKey(destFileExtended) && !fileMapping.ContainsValue(destFileExtended))
-                    {
-                        _additonalMappingFromPaths = "Yes";
-                        var sourceFileExtended = confInstance.GetFileMatch(destFileExtended);
-
-                        if (sourceFileExtended == null)
-                        {
-                            fileMappingFromPaths.Add(destFileExtended, null);
-                            //_fileMappingCountPaths++;
-                            //Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
-                        }
-                    }
-                }
-                Console.WriteLine("\tfinished populating missing FileMapping from paths. Added " + fileMappingFromPaths.Count + " entries.");
+                
+                Console.WriteLine("\n\tfinished populating missing FileMapping from paths. Added " + fileMappingFromPaths.Count + " entries.");
                 Console.WriteLine("\telapsed time: "+FormatTime(watchAddMissingFilesToMapping.ElapsedMilliseconds));
 
             }
@@ -242,9 +221,13 @@ namespace FileSynchronization
                 appConfLastWrite = (new FileInfo(confInstance.AppConfigLocation)).LastWriteTime;
             }
             
-
+            // append existing file mapping if app_config has been modified later than csv mapping file
+            // or if csv file does not exist
             if(appConfLastWrite > csvLastWrite ||
-                !csvExists)
+                !csvExists
+                ||
+                confInstance.FileMappingMissingFiles()
+              )
             { 
                 AddMissingFileMappingFromPaths(confInstance);
             }

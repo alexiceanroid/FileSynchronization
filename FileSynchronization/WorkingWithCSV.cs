@@ -185,7 +185,6 @@ namespace FileSynchronization
                 {
                     using (CsvFileReader reader = new CsvFileReader(fileMappingCsvLocation))
                     {
-                        var dummyD = new Dictionary<string, string>();
                         CsvRow row = new CsvRow();
                         while (reader.ReadRow(row))
                         {
@@ -194,13 +193,15 @@ namespace FileSynchronization
                             
                             var firstFileType = (FileType)Enum.Parse(typeof(FileType), row[0]);
                             var firstBasePath = row[1];
-                            var firstFileId = row[2];
-                            var firstFileExtended = confInstance.GetFileById(firstFileType, firstFileId);
+                            var firstFileFullPath = row[2];
+                            var firstFileId = row[3];
+                            var firstFileExtended = confInstance.GetFileByIdOrPath(firstFileType, firstFileId, firstFileFullPath);
 
 
-                            var secondFileType = row[3];
-                            var secondBasePath = row[4].Trim();
-                            var secondFileId = row[5].Trim();
+                            var secondFileType = row[4];
+                            var secondBasePath = row[5].Trim();
+                            var secondFullPath = row[6].Trim();
+                            var secondFileId = row[7].Trim();
                             if(String.IsNullOrEmpty(secondFileType)
                                 ||
                                String.IsNullOrEmpty(secondBasePath)
@@ -208,14 +209,14 @@ namespace FileSynchronization
                                String.IsNullOrEmpty(secondFileId)
                                 )
                             {
-                                confInstance.FileMapping.Add(firstFileExtended, null);
+                                fileMapping.Add(firstFileExtended, null);
                             }
                             else
                             {
-                                var secondFileType2 = (FileType)Enum.Parse(typeof(FileType), row[3]);
-                                var secondFileExtended = confInstance.GetFileById(secondFileType2, secondFileId);
+                                var secondFileType2 = (FileType)Enum.Parse(typeof(FileType), secondFileType);
+                                var secondFileExtended = confInstance.GetFileByIdOrPath(secondFileType2, secondFileId, secondFullPath);
 
-                                confInstance.FileMapping.Add(firstFileExtended, secondFileExtended);
+                                fileMapping.Add(firstFileExtended, secondFileExtended);
                             }
                             
                             linesRead++;
@@ -264,26 +265,31 @@ namespace FileSynchronization
                     var file2 = filePair.Value;
                     string file2FileType;
                     string file2BasePath;
+                    string file2FullPath;
                     string file2FileID;
                     if (file2 == null)
                     {
                         file2FileType = "";
                         file2BasePath = "";
                         file2FileID = "";
+                        file2FullPath = "";
                     }
                     else
                     {
                         file2FileType = file2.fileType.ToString();
                         file2BasePath = file2.basePath;
                         file2FileID = file2.fileID;
+                        file2FullPath = file2.fullPath;
                     }
                     var row = new CsvRow
                     {
                         file1.fileType.ToString(),
                         file1.basePath,
+                        file1.fullPath,
                         file1.fileID,
                         file2FileType,
                         file2BasePath,
+                        file2FullPath,
                         file2FileID
                     };
                     writer.WriteRow(row);

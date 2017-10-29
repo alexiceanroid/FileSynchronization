@@ -64,7 +64,7 @@ namespace FileSynchronization
             return filesMatch;
         }
 
-        public FileExtended GetFileMatch(FileExtended f)
+        public FileExtended GetFileCounterpart(FileExtended f)
         {
             FileExtended resultingFile = null;
             List<FileExtended> filesListToSearch;
@@ -128,7 +128,42 @@ namespace FileSynchronization
 
             return null;
         }
-        
+
+        public bool FileMappingMissingFiles()
+        {
+            return FilesMissingInMapping.Count > 0;
+        }
+
+        public List<FileExtended> FilesMissingInMapping
+        {
+
+            get
+            {
+                List<FileExtended> filesFromLists = SourceFiles.Union(DestinationFiles).ToList();
+                List<FileExtended> filesFromMapping = FileMapping.Keys.Union(FileMapping.Values).ToList();
+
+                return filesFromLists.Except(filesFromMapping).ToList();
+            }
+        }
+
+        public FileExtended GetFileByIdOrPath(FileType fileType, string fileId, string fullPath)
+        {
+            FileExtended resultingFile;
+            var fileFromId = GetFileById(fileType, fileId);
+            //resultingFile = fileFromId ?? GetFileByFullPath(fullPath);
+            if (fileFromId == null)
+            {
+                resultingFile = GetFileByFullPath(fullPath);
+                resultingFile.fileID = Kernel32.GetCustomFileId(fullPath);
+            }
+            else
+            {
+                resultingFile = fileFromId;
+            }
+
+            return resultingFile;
+        }
+
         
     }
 

@@ -36,54 +36,7 @@ namespace FileSynchronization
             return res;
         }
 
-        private bool CreateMarkForCsv(FilePairAction filePairAction)
-        {
-            bool res = false;
-            bool file1IsNew;
-            bool file2IsNew = false;
-
-            var file1 = filePairAction._file1;
-            var file2 = filePairAction._file2;
-
-            file1IsNew = NewFiles.Contains(file1);
-            if (file2 != null)
-            {
-                file2IsNew = NewFiles.Contains(file2);
-            }
-
-            if (file1IsNew && !(file2IsNew))
-            {
-                res = true;
-                if (file1.fileType == FileType.Source)
-                {
-                    filePairAction.actionDirection = Direction.SourceToDestination;
-                }
-                else
-                {
-                    filePairAction.actionDirection = Direction.DestinationToSource;
-                }
-            }
-            else if (!(file1IsNew) && file2IsNew)
-            {
-                res = true;
-                if (file2.fileType == FileType.Source)
-                {
-                    filePairAction.actionDirection = Direction.SourceToDestination;
-                }
-                else
-                {
-                    filePairAction.actionDirection = Direction.DestinationToSource;
-                }
-            }
-
-            if (res)
-            {
-                filePairAction.actionType = ActionType.Create;
-                AddFilePairWithCheck(filePairAction);
-            }
-
-            return res;
-        }
+        
 
 
         private bool UpdateMark(FilePairAction filePairAction)

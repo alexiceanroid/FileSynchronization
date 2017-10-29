@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace FileSynchronization
 {
@@ -8,13 +10,13 @@ namespace FileSynchronization
         Destination
     }
 
-    public class FileExtended
+    public class FileExtended : IEqualityComparer<FileExtended>
         {
             public readonly FileType fileType;
             public readonly string basePath;
             public readonly string fullPath;
             public readonly string lastWriteDateTime;
-            public readonly string fileID;
+            public string fileID;
 
             public FileExtended(FileType _fileType, string _basePath, 
                 string _fullPath, string _lastWriteDate, string _fileId)
@@ -64,6 +66,19 @@ namespace FileSynchronization
                 {
                     return false;
                 }
+            }
+
+            public bool Equals(FileExtended file1, FileExtended file2)
+            {
+                var file1Hash = GetHashCode(file1);
+                var file2Hash = GetHashCode(file2);
+
+                return file1Hash == file2Hash;
+            }
+
+            public int GetHashCode(FileExtended file)
+            {
+                return file.fileID.GetHashCode();
             }
         }
     
