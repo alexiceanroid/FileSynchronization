@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -74,42 +75,13 @@ namespace FileSynchronization
                         filePairAction.actionDirection = Direction.SourceToDestination;
                     }
                 }
-                AddFilePairWithCheck(filePairAction);
+                
             }
             return res;
         }
         
 
-        private bool DeleteMark(FilePairAction filePairAction)
-        {
-            // Action = Delete: this works like this - for each file in mapping taken from CSV a check is made:
-            //  if there is no file with the same id in source or destination files (depending on file1.fileType, corresponding list is queried)
-            //      then this file must have been deleted
-            bool res = false;
-            var file1 = filePairAction._file1;
-            var file2 = filePairAction._file2;
-            var searchedFile1 = _syncConfig.GetFileById(file1.fileType, file1.fileID);
-            var searchedFile2 = _syncConfig.GetFileById(file2.fileType, file2.fileID);
-            if (searchedFile1.fileID == null && searchedFile2.fileID != null)
-            {
-                filePairAction.actionType = ActionType.Delete;
-
-            }
-            return res;
-        }
-
         
-
-        private bool RenameMark(FilePairAction filePairAction)
-        {
-            bool res = false;
-
-            var file1 = filePairAction._file1;
-            var file2 = filePairAction._file2;
-
-
-            return res;
-        }
 
         private void AddFilePairWithCheck(FilePairAction filePairAction)
         {
@@ -123,6 +95,101 @@ namespace FileSynchronization
                 throw new Exception(mes);
             }
             _actionList.Add(filePairAction);
+        }
+
+        public void AppendActionListWithDeleteRenameMove(FileExtended firstFileExtended, FileExtended secondFileExtended, 
+            CsvRow row)
+        {
+            
+            var filePairAction = new FilePairAction(firstFileExtended, secondFileExtended);
+
+            
+
+            FileExtended sourceFile =
+                firstFileExtended.fileType == FileType.Source ? firstFileExtended : secondFileExtended;
+            FileExtended destFile =
+                secondFileExtended.fileType == FileType.Destination ? 
+                    secondFileExtended : firstFileExtended;
+
+            // handle deletions
+            bool deletion = IdentifyDeletion(sourceFile, destFile, filePairAction);
+            if (deletion)
+            {
+                _actionList.Add(filePairAction);
+                return;
+            }
+
+            // handle renaming and moving
+            var oldFirstFileType = (FileType)Enum.Parse(typeof(FileType), row[0]);
+            var oldFirstBasePath = row[1];
+            var oldFirstFileFullPath = row[2];
+            var oldFirstFileId = row[3];
+            var oldFirstFile = new FileExtended(oldFirstFileType, oldFirstBasePath, oldFirstFileFullPath, oldFirstFileId);
+
+            var oldSecondFileType = (FileType)Enum.Parse(typeof(FileType), row[4]);
+            var oldSecondBasePath = row[5];
+            var oldSecondFileFullPath = row[6];
+            var oldSecondFileId = row[7];
+            var oldSecondFile = new FileExtended(oldSecondFileType, oldSecondBasePath, oldSecondFileFullPath,
+                oldSecondFileId);
+
+            var oldSourceFile = oldFirstFileType == FileType.Source ? oldFirstFile : oldSecondFile;
+            var oldDestFile = oldSecondFileType == FileType.Destination ? oldSecondFile : oldFirstFile;
+
+
+            IdentifyRenameMove(sourceFile, oldSourceFile, destFile, oldDestFile, filePairAction);
+            if(filePairAction.actionType == ActionType.RenameMove
+                ||
+               filePairAction.actionType == ActionType.Delete)
+            { _actionList.Add(filePairAction);}
+        }
+
+        private void IdentifyRenameMove(FileExtended sourceFile, FileExtended oldSourceFile,
+            FileExtended destFile, FileExtended oldDestFile,
+            FilePairAction filePairAction)
+        {
+            if (sourceFile.fullPath != oldSourceFile.fullPath
+                || destFile.fullPath != oldDestFile.fullPath)
+            {
+                filePairAction.actionType = ActionType.RenameMove;
+
+                if (sourceFile.fullPath != oldSourceFile.fullPath
+                    && destFile.fullPath == oldDestFile.fullPath)
+                {
+                    filePairAction.actionDirection = Direction.SourceToDestination;
+                }
+                else if (sourceFile.fullPath == oldSourceFile.fullPath
+                         && destFile.fullPath != oldDestFile.fullPath)
+                {
+                    filePairAction.actionDirection = Direction.DestinationToSource;
+                }
+                else if (sourceFile.fullPath != oldSourceFile.fullPath
+                         && destFile.fullPath != oldDestFile.fullPath)
+                {
+                    filePairAction.actionDirection = Direction.Unknown;
+                }
+
+            }
+        }
+
+        private bool IdentifyDeletion(FileExtended sourceFile, FileExtended destFile, 
+            FilePairAction filePairAction)
+        {
+            bool res = false;
+
+            if (sourceFile == null && destFile != null)
+            {
+                filePairAction.actionType = ActionType.Delete;
+                filePairAction.actionDirection = Direction.SourceToDestination;
+                res = true;
+            }
+            else if (sourceFile != null && destFile == null)
+            {
+                filePairAction.actionType = ActionType.Delete;
+                filePairAction.actionDirection = Direction.DestinationToSource;
+                res = true;
+            }
+            return res;
         }
     }
 }

@@ -26,8 +26,7 @@ namespace FileSynchronization
     {
         None,
         Create, 
-        Rename,
-        Move,
+        RenameMove,
         Update,
         Delete
     }
@@ -36,6 +35,7 @@ namespace FileSynchronization
     {
         None,
         SourceToDestination,
-        DestinationToSource
+        DestinationToSource,
+        Unknown
     }
 }

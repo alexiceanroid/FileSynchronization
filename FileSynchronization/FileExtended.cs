@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 namespace FileSynchronization
 {
@@ -9,6 +10,8 @@ namespace FileSynchronization
         Source,
         Destination
     }
+
+
 
     public class FileExtended : IEqualityComparer<FileExtended>
         {
@@ -28,9 +31,23 @@ namespace FileSynchronization
                 fileID = _fileId;
             }
 
-        public FileExtended()
-        {
+            public FileExtended()
+            {
+            }
+
+            public FileExtended(FileType _fileType, string _basePath,
+                string _fullPath, string _fileId)
+            {
+            fileType = _fileType;
+                basePath = _basePath;
+                fullPath = _fullPath;
+                lastWriteDateTime = File.Exists(_fullPath) ?
+                    (new FileInfo(_fullPath)).LastWriteTimeUtc.ToString()
+                    :
+                    null;
+                fileID = _fileId;
         }
+
 
         public string RelativePath
             {

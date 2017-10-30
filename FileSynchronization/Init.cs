@@ -23,9 +23,9 @@ namespace FileSynchronization
         
         private static int _fileMappingCountPaths = 0;
 
-        internal static void InitializeFiles(SyncConfig confInstance)
+        internal static void InitializeFiles(SyncExecution syncExec)
         {
-            var folderMappings = confInstance.FolderMappings;
+            var folderMappings = syncExec.SyncConfig.FolderMappings;
             var watchInitFiles = new Stopwatch();
             var watchSourceFiles = new Stopwatch();
             var watchDestFiles = new Stopwatch();
@@ -44,10 +44,10 @@ namespace FileSynchronization
             populatingFilesTask[0] = Task.Factory.StartNew(() =>
             {
                 watchSourceFiles.Start();
-                confInstance.SourceFiles.Capacity = _totalSourceFilesCount;
+                syncExec.SourceFiles.Capacity = _totalSourceFilesCount;
                 foreach (var pair in folderMappings)
                 {
-                    PopulateSourceFiles(confInstance, pair.Key);
+                    PopulateSourceFiles(syncExec, pair.Key);
                 }
                 watchSourceFiles.Stop();
             }
@@ -56,10 +56,10 @@ namespace FileSynchronization
             populatingFilesTask[1] = Task.Factory.StartNew(() =>
                 {
                     watchDestFiles.Start();
-                    confInstance.DestinationFiles.Capacity = _totalDestFilesCount;
+                    syncExec.DestFiles.Capacity = _totalDestFilesCount;
                     foreach (var pair in folderMappings)
                     {
-                        PopulateDestinationFiles(confInstance, pair.Value);
+                        PopulateDestFiles(syncExec, pair.Value);
                     }
                     watchDestFiles.Stop();
                 }
@@ -84,15 +84,15 @@ namespace FileSynchronization
             return timeString;
         }
 
-        private static void PopulateDestinationFiles(SyncConfig confInstance, string destinationFolder)
+        private static void PopulateDestFiles(SyncExecution syncExec, string destinationFolder)
         {
             
-            PopulateFileLists(destinationFolder, confInstance.DestinationFiles,FileType.Destination);
+            PopulateFileLists(destinationFolder, syncExec.DestFiles,FileType.Destination);
         }
 
-        private static void PopulateSourceFiles(SyncConfig confInstance, string sourceFolder)
+        private static void PopulateSourceFiles(SyncExecution syncExec, string sourceFolder)
         {
-            PopulateFileLists(sourceFolder, confInstance.SourceFiles,FileType.Source);
+            PopulateFileLists(sourceFolder, syncExec.SourceFiles,FileType.Source);
         }
 
         private static void PopulateFileLists(string path, List<FileExtended> fileInfos, FileType fileType)
@@ -114,16 +114,6 @@ namespace FileSynchronization
                 );
 
                 fileInfos.Add(fileExtended);
-                /*
-                if (fileType == FileType.Source)
-                {
-                    _sourceFilesProcessed++;
-                }
-                else
-                {
-                    _destFilesProcessed++;
-                }
-                */
             }
             
         }
@@ -166,30 +156,30 @@ namespace FileSynchronization
 
         
 
-        private static void AddMissingFileMappingFromPaths(SyncConfig confInstance)
+        private static void AddMissingFileMappingFromPaths(SyncExecution syncExec)
         {
             
             
-            if (confInstance.SourceFiles.Count > 0)
+            if (syncExec.SourceFiles.Count > 0)
             {
                 var watchAddMissingFilesToMapping = new Stopwatch();
                 watchAddMissingFilesToMapping.Start();
-                var sourceFiles = confInstance.SourceFiles;
-                var destFiles = confInstance.DestinationFiles;
-                var fileMappingFromPaths = confInstance.FileMappingFromPaths;
-                var fileMapping = confInstance.FileMapping;
+                var sourceFiles = syncExec.SourceFiles;
+                var destFiles = syncExec.DestFiles;
+                var fileMappingFromPaths = syncExec.FileMappingFromPaths;
+                var fileMapping = syncExec.FileMapping;
 
                 Console.WriteLine();
                 Console.WriteLine("\tStarting populating missing FileMapping from paths:");
-                foreach (var missingFile in confInstance.FilesMissingInMapping)
+                foreach (var missingFile in syncExec.FilesMissingInMapping)
                 {
                     _additonalMappingFromPaths = "Yes";
                         
-                    fileMappingFromPaths.Add(missingFile, confInstance.GetFileCounterpart(missingFile));
+                    fileMappingFromPaths.Add(missingFile, syncExec.GetFileCounterpart(missingFile));
                     _fileMappingCountPaths++;
                     Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
 
-                    if (confInstance.FilesMissingInMapping.Count == 0)
+                    if (syncExec.FilesMissingInMapping.Count == 0)
                         break;
                 }
                 
@@ -204,21 +194,21 @@ namespace FileSynchronization
             }
         }
 
-        internal static void InitFileMapping(SyncConfig confInstance)
+        internal static void InitFileMapping(SyncExecution syncExec)
         {
             var watchFileMapping = new Stopwatch();
             Console.WriteLine("\nStarting preparing file mapping...");
             watchFileMapping.Start();
 
-            CSVHelper.InitFileMappingFromCsv(confInstance);
+            CSVHelper.InitFileMappingFromCsv(syncExec);
 
-            bool csvExists = File.Exists(confInstance.FileMappingCsvLocation);
+            bool csvExists = File.Exists(syncExec.FileMappingCsvLocation);
             DateTime csvLastWrite = DateTime.MinValue;
             DateTime appConfLastWrite = DateTime.MinValue;
             if (csvExists)
             {
-                csvLastWrite = (new FileInfo(confInstance.FileMappingCsvLocation)).LastWriteTime;
-                appConfLastWrite = (new FileInfo(confInstance.AppConfigLocation)).LastWriteTime;
+                csvLastWrite = (new FileInfo(syncExec.FileMappingCsvLocation)).LastWriteTime;
+                appConfLastWrite = (new FileInfo(syncExec.SyncConfig.AppConfigLocation)).LastWriteTime;
             }
             
             // append existing file mapping if app_config has been modified later than csv mapping file
@@ -226,10 +216,10 @@ namespace FileSynchronization
             if(appConfLastWrite > csvLastWrite ||
                 !csvExists
                 ||
-                confInstance.FileMappingMissingFiles()
+               syncExec.FileMappingMissingFiles()
               )
             { 
-                AddMissingFileMappingFromPaths(confInstance);
+                AddMissingFileMappingFromPaths(syncExec);
             }
             watchFileMapping.Stop();
             Console.WriteLine("File mapping complete!");

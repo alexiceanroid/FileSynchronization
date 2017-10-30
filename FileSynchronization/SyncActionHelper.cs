@@ -47,10 +47,10 @@ namespace FileSynchronization
             switch (fileType)
             {
                 case FileType.Source:
-                    newFileBasePath = _syncConfig.FolderMappings.FirstOrDefault(x => x.Key == basePath).Value;
+                    newFileBasePath = SyncConfig.FolderMappings.FirstOrDefault(x => x.Key == basePath).Value;
                     break;
                 case FileType.Destination:
-                    newFileBasePath = _syncConfig.FolderMappings.FirstOrDefault(x => x.Value == basePath).Key;
+                    newFileBasePath = SyncConfig.FolderMappings.FirstOrDefault(x => x.Value == basePath).Key;
                     break;
                 default:
                     throw new Exception("Invalid file type!");
@@ -97,7 +97,7 @@ namespace FileSynchronization
             listToUpdate.Add(newFileExtended);
 
 
-            var fileToCopyInstance = _syncConfig.GetFileByFullPath(fileToCopy);
+            var fileToCopyInstance = GetFileByFullPath(fileToCopy);
             // update file mapping from paths
             FileMappingFromPaths[fileToCopyInstance] = newFileExtended;
         }

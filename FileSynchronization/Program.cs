@@ -18,32 +18,31 @@ namespace FileSynchronization
         static long startDateTicks = new DateTime(2000,1,1,0,0,0).Ticks;
         static void Main(string[] args)
         {
-            
-            var confInstance = PrepareSyncConfig();
-            
-            var syncExec = new SyncExecution(confInstance);
-
-            syncExec.PopulateActionList();
-            syncExec.Start();
-
-            CSVHelper.SaveFileMappingToCsv(confInstance);
-            
-
-            //AllFilesTest();
-        }
-
-        static SyncConfig PrepareSyncConfig()
-        {
             // read and initialize source and destination folders:
             SyncConfig confInstance = Init.InitializeFolderMappings();
 
+            var syncExec = new SyncExecution(confInstance);
+            syncExec = PrepareSyncExec(syncExec);
+
+            syncExec.AppendActionList();
+            syncExec.PerformActions();
+
+            CSVHelper.SaveFileMappingToCsv(syncExec);
+
+        }
+
+        
+
+        static SyncExecution PrepareSyncExec(SyncExecution syncExec)
+        {
             // initialize source and destination files:
-            Init.InitializeFiles(confInstance);
+            Init.InitializeFiles(syncExec);
 
             // retrieve existing file mapping from CSV
             // and, if necessary, create additional mapping from paths
-            Init.InitFileMapping(confInstance);
-            return confInstance;
+            Init.InitFileMapping(syncExec);
+
+            return syncExec;
         }
 
         static void AllFilesTest()
