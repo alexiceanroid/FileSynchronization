@@ -104,24 +104,13 @@ namespace FileSynchronization
 
         private void ActionUpdate(string sourceFile, string destFile, Direction actionDirection)
         {
-            string file1, file2;
             try
             {
-                switch (actionDirection)
-                {
-                    case Direction.SourceToDestination:
-                        Console.WriteLine();
-                        file1 = sourceFile;
-                        file2 = destFile;
-                        break;
-                    case Direction.DestinationToSource:
-                        file1 = destFile;
-                        file2 = sourceFile;
-                        break;
-                    default:
-                        throw new Exception("Invalid action direction!");
-                }
+                string file1 = GetOldAndNewFile(sourceFile, destFile, actionDirection)["file1"];
+                string file2 = GetOldAndNewFile(sourceFile, destFile, actionDirection)["file2"];
 
+                // update file2 with file1
+                // update direction: file1 => file2
                 File.Copy(file1,file2, true);
                 
             }
@@ -152,5 +141,23 @@ namespace FileSynchronization
 
             return files;
         }
+
+        private void ActionRenameMove(string sourceFile, string destFile, Direction actionDirection)
+        {
+            try
+            {
+                string file1 = GetOldAndNewFile(sourceFile, destFile, actionDirection)["file1"];
+                string file2 = GetOldAndNewFile(sourceFile, destFile, actionDirection)["file2"];
+
+                
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error occured during update operation: \n" + ex.Message);
+            }
+        }
+
+        
     }
 }

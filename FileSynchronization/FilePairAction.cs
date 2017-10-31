@@ -26,6 +26,8 @@ namespace FileSynchronization
     {
         None,
         Create, 
+        Rename,
+        Move,
         RenameMove,
         Update,
         Delete

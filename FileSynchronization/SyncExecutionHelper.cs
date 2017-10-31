@@ -24,14 +24,8 @@ namespace FileSynchronization
             {
                 res = true;
                 filePairAction.actionType = ActionType.Create;
-                if (filePairAction._file1.fileType == FileType.Source)
-                {
-                    filePairAction.actionDirection = Direction.SourceToDestination;
-                }
-                else
-                {
-                    filePairAction.actionDirection = Direction.DestinationToSource;
-                }
+                filePairAction.actionDirection = filePairAction._file1.fileType == FileType.Source ? 
+                    Direction.SourceToDestination : Direction.DestinationToSource;
                 AddFilePairWithCheck(filePairAction);
             }
             return res;
@@ -55,25 +49,11 @@ namespace FileSynchronization
                 filePairAction.actionType = ActionType.Update;
                 if (file1LastUpdatedOn > file2LastUpdatedOn)
                 {
-                    if (file1.fileType == FileType.Source)
-                    {
-                        filePairAction.actionDirection = Direction.SourceToDestination;
-                    }
-                    else
-                    {
-                        filePairAction.actionDirection = Direction.DestinationToSource;
-                    }
+                    filePairAction.actionDirection = file1.fileType == FileType.Source ? Direction.SourceToDestination : Direction.DestinationToSource;
                 }
                 else
                 {
-                    if (file1.fileType == FileType.Source)
-                    {
-                        filePairAction.actionDirection = Direction.DestinationToSource;
-                    }
-                    else
-                    {
-                        filePairAction.actionDirection = Direction.SourceToDestination;
-                    }
+                    filePairAction.actionDirection = file1.fileType == FileType.Source ? Direction.DestinationToSource : Direction.SourceToDestination;
                 }
                 
             }
@@ -138,7 +118,9 @@ namespace FileSynchronization
 
 
             IdentifyRenameMove(sourceFile, oldSourceFile, destFile, oldDestFile, filePairAction);
-            if(filePairAction.actionType == ActionType.RenameMove
+            if(filePairAction.actionType == ActionType.Rename
+                ||
+               filePairAction.actionType == ActionType.Move
                 ||
                filePairAction.actionType == ActionType.Delete)
             { _actionList.Add(filePairAction);}
@@ -148,27 +130,93 @@ namespace FileSynchronization
             FileExtended destFile, FileExtended oldDestFile,
             FilePairAction filePairAction)
         {
-            if (sourceFile.fullPath != oldSourceFile.fullPath
-                || destFile.fullPath != oldDestFile.fullPath)
+            string sourceName = Path.GetFileName(sourceFile.fullPath);
+            string sourceDirectory = Path.GetDirectoryName(sourceFile.fullPath);
+            string oldSourceName = Path.GetFileName(oldSourceFile.fullPath);
+            string oldSourceDirectory = Path.GetDirectoryName(oldSourceFile.fullPath);
+
+            string destName = Path.GetFileName(destFile.fullPath);
+            string destDirectory = Path.GetDirectoryName(destFile.fullPath);
+            string oldDestName = Path.GetFileName(oldDestFile.fullPath);
+            string oldDestDirectory = Path.GetDirectoryName(oldDestFile.fullPath);
+
+            // identify RenameMove
+            if (
+                    (sourceName != oldSourceName || destName != oldDestName)
+                    &&
+                    (sourceDirectory != oldSourceDirectory || destDirectory != oldDestDirectory)
+                )
+
             {
                 filePairAction.actionType = ActionType.RenameMove;
 
                 if (sourceFile.fullPath != oldSourceFile.fullPath
-                    && destFile.fullPath == oldDestFile.fullPath)
+                    &&
+                    destFile.fullPath == oldDestFile.fullPath)
                 {
                     filePairAction.actionDirection = Direction.SourceToDestination;
                 }
                 else if (sourceFile.fullPath == oldSourceFile.fullPath
-                         && destFile.fullPath != oldDestFile.fullPath)
+                         &&
+                         destFile.fullPath != oldDestFile.fullPath)
                 {
                     filePairAction.actionDirection = Direction.DestinationToSource;
                 }
                 else if (sourceFile.fullPath != oldSourceFile.fullPath
-                         && destFile.fullPath != oldDestFile.fullPath)
+                         &&
+                         destFile.fullPath != oldDestFile.fullPath)
                 {
                     filePairAction.actionDirection = Direction.Unknown;
                 }
 
+                return;
+            }
+
+            // identify Rename
+            if (sourceName != oldSourceName
+                || destName != oldDestName)
+            {
+                filePairAction.actionType = ActionType.Rename;
+
+                if (sourceName != oldSourceName
+                    && destName == oldDestName)
+                {
+                    filePairAction.actionDirection = Direction.SourceToDestination;
+                }
+                else if (sourceName == oldSourceName
+                         && destName != oldDestName)
+                {
+                    filePairAction.actionDirection = Direction.DestinationToSource;
+                }
+                else if (sourceName != oldSourceName
+                         && destName != oldDestName)
+                {
+                    filePairAction.actionDirection = Direction.Unknown;
+                }
+                return;
+            }
+
+            // identify Move
+            if (sourceDirectory != oldSourceDirectory
+                || destDirectory != oldDestDirectory)
+            {
+                filePairAction.actionType = ActionType.Move;
+
+                if (sourceDirectory != oldSourceDirectory
+                    && destDirectory == oldDestDirectory)
+                {
+                    filePairAction.actionDirection = Direction.SourceToDestination;
+                }
+                else if (sourceDirectory == oldSourceDirectory
+                         && destDirectory != oldDestDirectory)
+                {
+                    filePairAction.actionDirection = Direction.DestinationToSource;
+                }
+                else if (sourceDirectory != oldSourceDirectory
+                         && destDirectory != oldDestDirectory)
+                {
+                    filePairAction.actionDirection = Direction.Unknown;
+                }
             }
         }
 
@@ -190,6 +238,32 @@ namespace FileSynchronization
                 res = true;
             }
             return res;
+        }
+
+        private Dictionary<string, string> GetOldAndNewFile(string sourceFile, string destFile,
+            Direction actionDirection)
+        {
+            var filesDict = new Dictionary<string, string>();
+
+            string file1, file2;
+            switch (actionDirection)
+            {
+                case Direction.SourceToDestination:
+                    file1 = sourceFile;
+                    file2 = destFile;
+                    break;
+                case Direction.DestinationToSource:
+                    file1 = destFile;
+                    file2 = sourceFile;
+                    break;
+                default:
+                    throw new Exception("Invalid action direction!");
+            }
+
+            filesDict.Add("file1", file1);
+            filesDict.Add("file2", file2);
+
+            return filesDict;
         }
     }
 }

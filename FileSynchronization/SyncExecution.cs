@@ -205,7 +205,7 @@ namespace FileSynchronization
         
         public void PerformActions()
         {
-            foreach (var action in _actionList)
+            foreach (var action in _actionList.FindAll(x => x.actionType != ActionType.None))
             {
                 var filesDict = GetSourceAndDestFile(action);
                 string sourceFile = filesDict[FileType.Source];
@@ -221,6 +221,11 @@ namespace FileSynchronization
                 case ActionType.Update:
                     ActionUpdate(sourceFile, destFile, action.actionDirection);
                     break;
+
+                case ActionType.RenameMove:
+                    ActionRenameMove(sourceFile, destFile, action.actionDirection);
+                    break;
+
                     /*
                 case ActionType.None:
                     UpdateFileMapping(action);
