@@ -28,6 +28,44 @@ namespace FileSynchronization
             FileMappingFromPaths = new Dictionary<FileExtended, FileExtended>();
         }
 
+        internal void DisplayActionsList()
+        {
+            string direction;
+            string source;
+            string dest;
+
+
+            Console.WriteLine("\nList of actions to perform: ");
+            foreach (var action in _actionList)
+            {
+                switch (action.actionDirection)
+                {
+                    case Direction.None:
+                        direction = "==";
+                        break;
+                    case Direction.SourceToDestination:
+                        direction = "=>";
+                        break;
+                    case Direction.DestinationToSource:
+                        direction = "<=";
+                        break;
+                    case Direction.Unknown:
+                        direction = "??";
+                        break;
+                    default:
+                        throw new Exception("Ivalid direction");
+                }
+
+                var filesDict = GetSourceAndDestFile(action);
+                source = filesDict[FileType.Source];
+                dest = filesDict[FileType.Destination];
+
+                Console.WriteLine(source + " " + 
+                    direction + " " + action.actionType + " " + direction + " " +
+                    dest);
+            }
+        }
+
         public Dictionary<FileExtended, FileExtended> FileMapping =>
             //(Dictionary<FileExtended, FileExtended>) 
             FileMappingFromCsv.Union(FileMappingFromPaths).ToDictionary(s => s.Key, s => s.Value);
@@ -44,9 +82,9 @@ namespace FileSynchronization
                 var f2BasePathMatchesValue = f2.basePath == folderMapping.Value;
 
                 if (
-                    (f1BasePathMatchesKey && f2BasePathMatchesValue)
-                    ||
-                    (f1BasePathMatchesValue && f2BasePathMatchesKey)
+                        (f1BasePathMatchesKey && f2BasePathMatchesValue)
+                        ||
+                        (f1BasePathMatchesValue && f2BasePathMatchesKey)
                     )
                 {
                     basePathsCompatible = true;
@@ -174,7 +212,10 @@ namespace FileSynchronization
                 
                 bool create = CreateMarkForPaths(filePairAction);
                 if (create)
+                {
+                    AddFilePairWithCheck(filePairAction);
                     continue;
+                }
                 
                 
                 bool update = UpdateMark(filePairAction);
@@ -184,8 +225,7 @@ namespace FileSynchronization
                     continue;
                 }
 
-
-                MarkAsEqualForPaths(filePairAction);
+                AddFilePairWithCheck(filePairAction);
             }
 
             foreach (var filePair in FileMappingFromCsv)
@@ -195,10 +235,13 @@ namespace FileSynchronization
 
                 bool update = UpdateMark(filePairAction);
                 if (update)
+                {
+                    AddFilePairWithCheck(filePairAction);
                     continue;
-                
+                }
 
-                MarkAsEqualForPaths(filePairAction);
+
+                AddFilePairWithCheck(filePairAction);
             }
         }
 

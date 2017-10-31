@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace FileSynchronization
@@ -41,8 +42,8 @@ namespace FileSynchronization
             fileType = _fileType;
                 basePath = _basePath;
                 fullPath = _fullPath;
-                lastWriteDateTime = File.Exists(_fullPath) ?
-                    (new FileInfo(_fullPath)).LastWriteTimeUtc.ToString()
+            lastWriteDateTime = File.Exists(_fullPath) ?
+                (new FileInfo(_fullPath)).LastWriteTimeUtc.ToString(CultureInfo.InvariantCulture)
                     :
                     null;
                 fileID = _fileId;

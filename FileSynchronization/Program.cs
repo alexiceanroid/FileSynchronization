@@ -25,6 +25,9 @@ namespace FileSynchronization
             syncExec = PrepareSyncExec(syncExec);
 
             syncExec.AppendActionList();
+
+            syncExec.DisplayActionsList();
+
             syncExec.PerformActions();
 
             CSVHelper.SaveFileMappingToCsv(syncExec);

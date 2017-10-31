@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,12 +10,6 @@ namespace FileSynchronization
 {
     public partial class SyncExecution
     {
-        private void MarkAsEqualForPaths(FilePairAction filePairAction)
-        {
-            filePairAction.actionDirection = Direction.None;
-            filePairAction.actionType = ActionType.None;
-            AddFilePairWithCheck(filePairAction);
-        }
 
         private bool CreateMarkForPaths(FilePairAction filePairAction)
         {
@@ -26,7 +21,6 @@ namespace FileSynchronization
                 filePairAction.actionType = ActionType.Create;
                 filePairAction.actionDirection = filePairAction._file1.fileType == FileType.Source ? 
                     Direction.SourceToDestination : Direction.DestinationToSource;
-                AddFilePairWithCheck(filePairAction);
             }
             return res;
         }
@@ -40,8 +34,8 @@ namespace FileSynchronization
             var file1 = filePairAction._file1;
             var file2 = filePairAction._file2;
             // Action = Update
-            DateTime file1LastUpdatedOn = DateTime.Parse(file1.lastWriteDateTime);
-            DateTime file2LastUpdatedOn = DateTime.Parse(file2.lastWriteDateTime);
+            DateTime file1LastUpdatedOn = DateTime.Parse(file1.lastWriteDateTime, CultureInfo.InvariantCulture);
+            DateTime file2LastUpdatedOn = DateTime.Parse(file2.lastWriteDateTime, CultureInfo.InvariantCulture);
             if (file1LastUpdatedOn.Date != file2LastUpdatedOn.Date
                 || file1LastUpdatedOn.TimeOfDay != file2LastUpdatedOn.TimeOfDay)
             {
@@ -65,12 +59,25 @@ namespace FileSynchronization
 
         private void AddFilePairWithCheck(FilePairAction filePairAction)
         {
-            if (_actionList.Contains(filePairAction))
+            bool filePairAddedAlready = false;
+
+            foreach (var entry in _actionList)
+            {
+                if(filePairAction._file1 == entry._file1
+                    &&
+                    filePairAction._file2 == entry._file2)
+                {
+                    filePairAddedAlready = true;
+                    break;
+                }
+
+            }
+
+            if (filePairAddedAlready)
             {
                 string mes = "The actions list already contains this file combination:\n" +
                              "\t source file:      " + filePairAction._file1.fullPath + "\n" +
-                             "\t destination file: " + filePairAction._file2.fullPath + "\n" +
-                             "\t " + filePairAction.actionType + ", " + filePairAction.actionDirection;
+                             "\t destination file: " + filePairAction._file2.fullPath;
 
                 throw new Exception(mes);
             }

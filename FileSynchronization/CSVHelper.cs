@@ -114,7 +114,8 @@ namespace FileSynchronization
         {
             var watchSaveToCsv = new Stopwatch();
             watchSaveToCsv.Start();
-            Console.WriteLine("\tsaving file mapping to CSV:");
+            Console.WriteLine();
+            Console.WriteLine("Saving file mapping to CSV:");
             // Write data to CSV file
 
             var fileMapping = syncExec.FileMapping;

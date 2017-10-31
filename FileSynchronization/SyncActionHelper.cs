@@ -126,15 +126,20 @@ namespace FileSynchronization
             string sourceFile = "";
             string destFile = "";
 
-            if (action._file1.fileType == FileType.Source)
+            if (action._file1 == null)
             {
-                sourceFile = action._file1 != null ? action._file1.fullPath : "";
-                destFile = action._file2 != null? action._file2.fullPath : "";
+                sourceFile = action._file2.fileType == FileType.Source ? action._file2.fullPath : "";
+                destFile = action._file2.fileType == FileType.Destination ? action._file2.fullPath : "";
+            }
+            else if (action._file2 == null)
+            {
+                sourceFile = action._file1.fileType == FileType.Source ? action._file1.fullPath : "";
+                destFile = action._file1.fileType == FileType.Destination ? action._file1.fullPath : "";
             }
             else
             {
-                destFile = action._file1 != null ? action._file1.fullPath : "";
-                sourceFile = action._file2 != null ? action._file2.fullPath : "";
+                sourceFile = action._file1.fileType == FileType.Source ? action._file1.fullPath : action._file2.fullPath;
+                destFile = action._file2.fileType == FileType.Destination ? action._file2.fullPath : action._file1.fullPath;
             }
             files.Add(FileType.Source, sourceFile);
             files.Add(FileType.Destination, destFile);
