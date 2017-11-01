@@ -30,7 +30,8 @@ namespace FileSynchronization
 
             syncExec.PerformActions();
 
-            CSVHelper.SaveFileMappingToCsv(syncExec);
+            if(syncExec.AnyChangesNeeded)
+                CSVHelper.SaveFileMappingToCsv(syncExec);
 
         }
 

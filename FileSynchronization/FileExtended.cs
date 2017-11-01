@@ -39,10 +39,10 @@ namespace FileSynchronization
             public FileExtended(FileType _fileType, string _basePath,
                 string _fullPath, string _fileId)
             {
-            fileType = _fileType;
+                fileType = _fileType;
                 basePath = _basePath;
                 fullPath = _fullPath;
-            lastWriteDateTime = File.Exists(_fullPath) ?
+                lastWriteDateTime = File.Exists(_fullPath) ?
                 (new FileInfo(_fullPath)).LastWriteTimeUtc.ToString(CultureInfo.InvariantCulture)
                     :
                     null;

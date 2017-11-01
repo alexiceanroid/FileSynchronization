@@ -28,6 +28,15 @@ namespace FileSynchronization
             FileMappingFromPaths = new Dictionary<FileExtended, FileExtended>();
         }
 
+        public bool AnyChangesNeeded
+        {
+            get
+            {
+                int numOfChanges = _actionList.FindAll(x => x.actionType != ActionType.None).Count;
+                return numOfChanges > 0;
+            }
+        }
+
         internal void DisplayActionsList()
         {
             string direction;
@@ -207,6 +216,9 @@ namespace FileSynchronization
         {
             foreach (var filePair in FileMappingFromPaths)
             {
+                if (ActionListContainsFilePair(filePair))
+                    continue;
+
                 FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value);
                 
                 
@@ -230,6 +242,9 @@ namespace FileSynchronization
 
             foreach (var filePair in FileMappingFromCsv)
             {
+                if (ActionListContainsFilePair(filePair))
+                    continue;
+
                 FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value);
 
 
@@ -269,14 +284,22 @@ namespace FileSynchronization
                     ActionRenameMove(sourceFile, destFile, action.actionDirection);
                     break;
 
-                    /*
-                case ActionType.None:
-                    UpdateFileMapping(action);
+                case ActionType.Rename:
+                    ActionRenameMove(sourceFile, destFile, action.actionDirection);
                     break;
-                    
-                default:
-                    throw new Exception("Invalid file pair action: " + action.actionType);
-                    */
+
+                case ActionType.Move:
+                    ActionRenameMove(sourceFile, destFile, action.actionDirection);
+                    break;
+
+                        /*
+                    case ActionType.None:
+                        UpdateFileMapping(action);
+                        break;
+
+                    default:
+                        throw new Exception("Invalid file pair action: " + action.actionType);
+                        */
                 }
             }
         }

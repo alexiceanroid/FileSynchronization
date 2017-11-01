@@ -17,7 +17,8 @@ namespace FileSynchronization
         static readonly string fileMappingCsvLocation = (string)configReader.GetValue(fileMappingCsvFile, typeof(string));
 
         // the assumption is that CSV file has the following structure:
-        // <firstFileType>,<firstBasePath>,<firstFileId>,<secondFileType>,<secondBasePath>,<secondFileId>
+        // <firstFileType>,<firstBasePath>,<firstFileFullPath>,<firstFileId>,
+        //    <secondFileType>,<secondBasePath>,<secondFullPath>,<secondFileId>
         public static void InitFileMappingFromCsv(SyncExecution syncExec)
         {
 

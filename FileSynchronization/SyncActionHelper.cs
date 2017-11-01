@@ -106,12 +106,15 @@ namespace FileSynchronization
         {
             try
             {
-                string file1 = GetOldAndNewFile(sourceFile, destFile, actionDirection)["file1"];
-                string file2 = GetOldAndNewFile(sourceFile, destFile, actionDirection)["file2"];
+                FileExtended newFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["new"];
+                FileExtended oldFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["old"];
+
+                string newFileFullPath = newFile.fullPath;
+                string oldFileFullPath = oldFile.fullPath;
 
                 // update file2 with file1
-                // update direction: file1 => file2
-                File.Copy(file1,file2, true);
+                // update direction: newFileFullPath => oldFileFullPath
+                File.Copy(newFileFullPath, oldFileFullPath, true);
                 
             }
             catch (Exception ex)
@@ -151,10 +154,25 @@ namespace FileSynchronization
         {
             try
             {
-                string file1 = GetOldAndNewFile(sourceFile, destFile, actionDirection)["file1"];
-                string file2 = GetOldAndNewFile(sourceFile, destFile, actionDirection)["file2"];
+                var newFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["new"];
+                var oldFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["old"];
 
-                
+                string oldFileExpectedFullPath = oldFile.basePath + newFile.RelativePath;
+
+                File.Move(oldFile.fullPath, oldFileExpectedFullPath);
+
+                var oldFileExpected = new FileExtended(oldFile.fileType,oldFile.basePath,
+                    oldFileExpectedFullPath, oldFile.fileID);
+
+                if (oldFile.fileType == FileType.Source)
+                {
+                    FileMappingFromCsv.Remove(oldFile);
+                    FileMappingFromCsv.Add(oldFileExpected,newFile);
+                }
+                else
+                {
+                    FileMappingFromCsv[newFile] = oldFileExpected;
+                }
 
             }
             catch (Exception ex)

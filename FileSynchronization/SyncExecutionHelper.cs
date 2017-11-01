@@ -247,30 +247,50 @@ namespace FileSynchronization
             return res;
         }
 
-        private Dictionary<string, string> GetOldAndNewFile(string sourceFile, string destFile,
+        private Dictionary<string, FileExtended> GetOldAndNewFile(string sourceFile, string destFile,
             Direction actionDirection)
         {
-            var filesDict = new Dictionary<string, string>();
+            var filesDict = new Dictionary<string, FileExtended>();
 
-            string file1, file2;
+            var sourceFileExtended = SourceFiles.FirstOrDefault(x => x.fullPath == sourceFile);
+            var destFileExtended = DestFiles.FirstOrDefault(x => x.fullPath == destFile);
+
+            FileExtended file1, file2;
             switch (actionDirection)
             {
                 case Direction.SourceToDestination:
-                    file1 = sourceFile;
-                    file2 = destFile;
+                    file1 = sourceFileExtended;
+                    file2 = destFileExtended;
                     break;
                 case Direction.DestinationToSource:
-                    file1 = destFile;
-                    file2 = sourceFile;
+                    file1 = destFileExtended;
+                    file2 = sourceFileExtended;
                     break;
                 default:
                     throw new Exception("Invalid action direction!");
             }
 
-            filesDict.Add("file1", file1);
-            filesDict.Add("file2", file2);
+            filesDict.Add("new", file1);
+            filesDict.Add("old", file2);
 
             return filesDict;
+        }
+
+        internal bool ActionListContainsFilePair(KeyValuePair<FileExtended,FileExtended> filePair)
+        {
+            bool res = false;
+            foreach (var action in _actionList)
+            {
+                if ((action._file1 == filePair.Key && action._file2 == filePair.Value)
+                    ||
+                    (action._file1 == filePair.Value && action._file2 == filePair.Key))
+                {
+                    res = true;
+                    break;
+                }
+            }
+
+            return res;
         }
     }
 }
