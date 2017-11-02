@@ -14,6 +14,12 @@ namespace FileSynchronization
         private List<FilePairAction> _actionList;
         public readonly SyncConfig SyncConfig;
 
+        public int FilesCreated { get; set; }
+        public int FilesUpdated { get; set; }
+        public int FilesRenamed { get; set; }
+        public int FilesMoved { get; set; }
+        public int FilesDeleted { get; set; }
+
         public List<FileExtended> SourceFiles { get; set; }
         public List<FileExtended> DestFiles { get; set; }
         public Dictionary<FileExtended, FileExtended> FileMappingFromCsv { get; set; }
@@ -288,23 +294,39 @@ namespace FileSynchronization
 
                     case ActionType.Create:
                         ActionCreate(sourceFile,destFile,action.actionDirection);
+                        FilesCreated++;
+                        DisplaySyncProcessStats();
                         break;
                     
                 case ActionType.Update:
                     ActionUpdate(sourceFile, destFile, action.actionDirection);
-                    break;
+                    FilesUpdated++;
+                    DisplaySyncProcessStats();
+                        break;
 
                 case ActionType.RenameMove:
                     ActionRenameMove(sourceFile, destFile, action.actionDirection);
-                    break;
+                    FilesMoved++;
+                    DisplaySyncProcessStats();
+                        break;
 
                 case ActionType.Rename:
                     ActionRenameMove(sourceFile, destFile, action.actionDirection);
-                    break;
+                    FilesRenamed++;
+                    DisplaySyncProcessStats();
+                        break;
 
                 case ActionType.Move:
                     ActionRenameMove(sourceFile, destFile, action.actionDirection);
-                    break;
+                    FilesMoved++;
+                    DisplaySyncProcessStats();
+                        break;
+
+                case ActionType.Delete:
+                    ActionDelete(sourceFile,destFile,action.actionDirection);
+                    FilesDeleted++;
+                    DisplaySyncProcessStats();
+                        break;
 
                         /*
                     case ActionType.None:
@@ -318,7 +340,7 @@ namespace FileSynchronization
             }
             syncWatch.Stop();
 
-            Console.WriteLine("Synchronization complete! Elapsed time: " 
+            Console.WriteLine("\nSynchronization complete! Elapsed time: " 
                 + Init.FormatTime(syncWatch.ElapsedMilliseconds));
         }
 

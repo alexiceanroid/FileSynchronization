@@ -311,5 +311,19 @@ namespace FileSynchronization
                 throw new Exception("Could not find specified file in mapping: \n" + oldFile.fullPath);
             }
         }
+
+        internal void DisplaySyncProcessStats()
+        {
+            int filesProcessed = FilesCreated + FilesDeleted + FilesMoved + FilesRenamed + FilesUpdated;
+            if (filesProcessed > 1)
+            {
+                Console.SetCursorPosition(0, Console.CursorTop - 4);
+            }
+            Console.Write("\rfiles created: " + FilesCreated + ";\n"
+                          + "files updated: " + FilesUpdated + ";\n"
+                          + "files renamed: " + FilesRenamed + ";\n"
+                          + "files moved:   " + FilesMoved + ";\n"
+                          + "files deleted: " + FilesDeleted);
+        }
     }
 }

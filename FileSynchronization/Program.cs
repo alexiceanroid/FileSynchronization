@@ -18,6 +18,7 @@ namespace FileSynchronization
         static long startDateTicks = new DateTime(2000,1,1,0,0,0).Ticks;
         static void Main(string[] args)
         {
+            
             // read and initialize source and destination folders:
             SyncConfig confInstance = Init.InitializeFolderMappings();
 
@@ -26,13 +27,14 @@ namespace FileSynchronization
 
             syncExec.AppendActionList();
 
-            syncExec.DisplayActionsList();
+            //syncExec.DisplayActionsList();
 
             syncExec.PerformActions();
 
             if(syncExec.AnyChangesNeeded)
                 CSVHelper.SaveFileMappingToCsv(syncExec);
-
+            
+            //ConsoleTest();
         }
 
         
@@ -49,40 +51,21 @@ namespace FileSynchronization
             return syncExec;
         }
 
-        static void AllFilesTest()
+        private static void ConsoleTest()
         {
-            var allFilesPaths = Directory.GetFiles(@"E:\synced_D", "*.*", SearchOption.AllDirectories);
-            var allFilesDict = new Dictionary<string,string>();
+            Console.Write("\rfiles created: " + 1 + ";\n"
+                          + "files updated: " + 2 + ";\n"
+                          + "files renamed: " + 3 + ";\n"
+                          + "files moved:   " + 4 + ";\n"
+                          + "files deleted: " + 5);
 
-            foreach (var filePath in allFilesPaths)
-            {
-                //var file = new FileInfo(filePath);
-                //var fileExtension = file.Extension;
-                //int fileCreateDateTicks = (int)(file.CreationTimeUtc.Ticks - startDateTicks);
-                var filId = Kernel32.GetCustomFileId(filePath);
-                //long newTicks = file.CreationTimeUtc.Ticks;
+            Console.SetCursorPosition(0, Console.CursorTop - 4);
 
-                allFilesDict.Add(filId, filePath);
-            }
-            /*
-            var minDate = allFilesDict.Values.Min();
-            var maxDate = allFilesDict.Values.Max();
-
-            var fileMinDate = allFilesDict.FirstOrDefault(x => x.Value == minDate).Key;
-            var fileMaxDate = allFilesDict.FirstOrDefault(x => x.Value == maxDate).Key;
-
-            Console.WriteLine($"Min date: {minDate}. The file: {fileMinDate}");
-            Console.WriteLine($"Max date: {maxDate}. The file: {fileMaxDate}");
-            */
-            
-            var troublesomeFiles = allFilesDict.GroupBy(x => x.Value).Where(grp => grp.Count() > 1).Select(grp => grp.Key).ToList();
-            foreach (var fileName in troublesomeFiles)
-            {
-                Console.WriteLine(fileName);
-            }
-            
-
-            
+            Console.Write("\rfiles created: " + 6 + ";\n"
+                          + "files updated: " + 7 + ";\n"
+                          + "files renamed: " + 8 + ";\n"
+                          + "files moved:   " + 9 + ";\n"
+                          + "files deleted: " + 10);
         }
     }
 }

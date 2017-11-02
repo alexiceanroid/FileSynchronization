@@ -17,8 +17,10 @@ namespace FileSynchronization
             string newFileLastWriteDate;
             string newFileId;
 
-            string sourceFile = sourceFileExtended.fullPath;
-            string destFile = destFileExtended.fullPath;
+            string sourceFile = sourceFileExtended != null ?
+                sourceFileExtended.fullPath : "";
+            string destFile = destFileExtended != null ?
+                destFileExtended.fullPath : "";
 
             // determine which file needs copying: source or destination
             string fileToCopy;
@@ -31,15 +33,15 @@ namespace FileSynchronization
                     fileToCopy = sourceFile;
                     fileType = FileType.Source;
                     newFileType = FileType.Destination;
-                    // get base path for this file by querying file mapping:
-                    basePath = SourceFiles.FirstOrDefault(x => x.fullPath == fileToCopy).basePath;
+                    // get base path for this file:
+                    basePath = sourceFileExtended.basePath;
                     break;
                 case Direction.DestinationToSource:
                     fileToCopy = destFile;
                     fileType = FileType.Destination;
                     newFileType = FileType.Source;
-                    // get base path for this file by querying file mapping:
-                    basePath = DestFiles.FirstOrDefault(x => x.fullPath == fileToCopy).basePath;
+                    // get base path for this file:
+                    basePath = destFileExtended.basePath;
                     break;
                 default:
                     throw new Exception("Invalid action direction for Create operation!");
@@ -165,10 +167,10 @@ namespace FileSynchronization
                 var oldFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["old"];
 
                 string oldFileExpectedFullPath = oldFile.basePath + newFile.RelativePath;
-                string oldFileExpecedDirectory = Path.GetDirectoryName(oldFileExpectedFullPath);
+                string oldFileExpectedDirectory = Path.GetDirectoryName(oldFileExpectedFullPath);
 
-                if (!Directory.Exists(oldFileExpecedDirectory))
-                    Directory.CreateDirectory(oldFileExpecedDirectory);
+                if (!Directory.Exists(oldFileExpectedDirectory))
+                    Directory.CreateDirectory(oldFileExpectedDirectory);
 
                 File.Move(oldFile.fullPath, oldFileExpectedFullPath);
 
@@ -184,6 +186,31 @@ namespace FileSynchronization
             }
         }
 
-        
+        private void ActionDelete(FileExtended sourceFileExtended, FileExtended destFileExtended,
+            Direction actionDirection)
+        {
+            FileExtended fileToDelete = null;
+            switch (actionDirection)
+            {
+                case Direction.SourceToDestination:
+                    fileToDelete = destFileExtended;
+                    FileMappingFromCsv.Remove(destFileExtended);
+                    break;
+                case Direction.DestinationToSource:
+                    fileToDelete = sourceFileExtended;
+                    FileMappingFromCsv.Remove(sourceFileExtended);
+                    break;
+            }
+
+            try
+            {
+                File.Delete(fileToDelete.fullPath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
     }
 }
