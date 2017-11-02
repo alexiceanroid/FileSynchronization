@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -65,9 +66,9 @@ namespace FileSynchronization
                         throw new Exception("Ivalid direction");
                 }
 
-                var filesDict = GetSourceAndDestFile(action);
-                source = filesDict[FileType.Source];
-                dest = filesDict[FileType.Destination];
+                var filesDict = GetSourceAndDestFile(action._file1,action._file2);
+                source = filesDict[FileType.Source] != null ? filesDict[FileType.Source].fullPath : "";
+                dest = filesDict[FileType.Destination] != null ?  filesDict[FileType.Destination].fullPath : "";
 
                 Console.WriteLine(source + " " + 
                     direction + " " + action.actionType + " " + direction + " " +
@@ -200,7 +201,8 @@ namespace FileSynchronization
             if (fileFromId == null)
             {
                 resultingFile = GetFileByFullPath(fullPath);
-                resultingFile.fileID = Kernel32.GetCustomFileId(fullPath);
+                if(resultingFile != null)
+                    resultingFile.fileID = Kernel32.GetCustomFileId(fullPath);
             }
             else
             {
@@ -260,14 +262,26 @@ namespace FileSynchronization
             }
         }
 
-        
+
         public void PerformActions()
         {
-            foreach (var action in _actionList.FindAll(x => x.actionType != ActionType.None))
+            Console.WriteLine();
+            var actionsToPerform = _actionList.FindAll(x => x.actionType != ActionType.None);
+            if (actionsToPerform.Count == 0)
             {
-                var filesDict = GetSourceAndDestFile(action);
-                string sourceFile = filesDict[FileType.Source];
-                string destFile = filesDict[FileType.Destination];
+                Console.WriteLine("No changes have been detected - no actions needed");
+                return;
+            }
+
+            var syncWatch = new Stopwatch();
+            syncWatch.Start();
+
+            Console.WriteLine("Starting synchronization....");
+            foreach (var action in actionsToPerform)
+            {
+                var filesDict = GetSourceAndDestFile(action._file1, action._file2);
+                FileExtended sourceFile = filesDict[FileType.Source];
+                FileExtended destFile = filesDict[FileType.Destination];
 
                 switch (action.actionType)
                 {
@@ -302,6 +316,10 @@ namespace FileSynchronization
                         */
                 }
             }
+            syncWatch.Stop();
+
+            Console.WriteLine("Synchronization complete! Elapsed time: " 
+                + Init.FormatTime(syncWatch.ElapsedMilliseconds));
         }
 
         

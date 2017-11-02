@@ -8,7 +8,7 @@ namespace FileSynchronization
 {
     public partial class SyncExecution
     {
-        private void ActionCreate(string sourceFile, string destFile, Direction actionDirection)
+        private void ActionCreate(FileExtended sourceFileExtended, FileExtended destFileExtended, Direction actionDirection)
         {
             // declare fields for a file to be created
             FileType newFileType;
@@ -16,6 +16,9 @@ namespace FileSynchronization
             string newFileFullPath;
             string newFileLastWriteDate;
             string newFileId;
+
+            string sourceFile = sourceFileExtended.fullPath;
+            string destFile = destFileExtended.fullPath;
 
             // determine which file needs copying: source or destination
             string fileToCopy;
@@ -102,8 +105,10 @@ namespace FileSynchronization
             FileMappingFromPaths[fileToCopyInstance] = newFileExtended;
         }
 
-        private void ActionUpdate(string sourceFile, string destFile, Direction actionDirection)
+        private void ActionUpdate(FileExtended sourceFileExtended, FileExtended destFileExtended, Direction actionDirection)
         {
+            string sourceFile = sourceFileExtended.fullPath;
+            string destFile = destFileExtended.fullPath;
             try
             {
                 FileExtended newFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["new"];
@@ -123,26 +128,26 @@ namespace FileSynchronization
             }
         }
 
-        private Dictionary<FileType,string> GetSourceAndDestFile(FilePairAction action)
+        private Dictionary<FileType, FileExtended> GetSourceAndDestFile(FileExtended file1, FileExtended file2)
         {
-            var files = new Dictionary<FileType, string>();
-            string sourceFile = "";
-            string destFile = "";
+            var files = new Dictionary<FileType, FileExtended>();
+            FileExtended sourceFile;
+            FileExtended destFile;
 
-            if (action._file1 == null)
+            if (file1 == null)
             {
-                sourceFile = action._file2.fileType == FileType.Source ? action._file2.fullPath : "";
-                destFile = action._file2.fileType == FileType.Destination ? action._file2.fullPath : "";
+                sourceFile = file2.fileType == FileType.Source ? file2 : null;
+                destFile = file2.fileType == FileType.Destination ? file2 : null;
             }
-            else if (action._file2 == null)
+            else if (file2 == null)
             {
-                sourceFile = action._file1.fileType == FileType.Source ? action._file1.fullPath : "";
-                destFile = action._file1.fileType == FileType.Destination ? action._file1.fullPath : "";
+                sourceFile = file1.fileType == FileType.Source ? file1 : null;
+                destFile = file1.fileType == FileType.Destination ? file1 : null;
             }
             else
             {
-                sourceFile = action._file1.fileType == FileType.Source ? action._file1.fullPath : action._file2.fullPath;
-                destFile = action._file2.fileType == FileType.Destination ? action._file2.fullPath : action._file1.fullPath;
+                sourceFile = file1.fileType == FileType.Source ? file1 : file2;
+                destFile = file2.fileType == FileType.Destination ? file2 : file1;
             }
             files.Add(FileType.Source, sourceFile);
             files.Add(FileType.Destination, destFile);
@@ -150,34 +155,32 @@ namespace FileSynchronization
             return files;
         }
 
-        private void ActionRenameMove(string sourceFile, string destFile, Direction actionDirection)
+        private void ActionRenameMove(FileExtended sourceFileExtended, FileExtended destFileExtended, Direction actionDirection)
         {
+            string sourceFile = sourceFileExtended.fullPath;
+            string destFile = destFileExtended.fullPath;
             try
             {
                 var newFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["new"];
                 var oldFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["old"];
 
                 string oldFileExpectedFullPath = oldFile.basePath + newFile.RelativePath;
+                string oldFileExpecedDirectory = Path.GetDirectoryName(oldFileExpectedFullPath);
+
+                if (!Directory.Exists(oldFileExpecedDirectory))
+                    Directory.CreateDirectory(oldFileExpecedDirectory);
 
                 File.Move(oldFile.fullPath, oldFileExpectedFullPath);
 
                 var oldFileExpected = new FileExtended(oldFile.fileType,oldFile.basePath,
                     oldFileExpectedFullPath, oldFile.fileID);
 
-                if (oldFile.fileType == FileType.Source)
-                {
-                    FileMappingFromCsv.Remove(oldFile);
-                    FileMappingFromCsv.Add(oldFileExpected,newFile);
-                }
-                else
-                {
-                    FileMappingFromCsv[newFile] = oldFileExpected;
-                }
+                UpdateFileInMapping(oldFile, oldFileExpected);
 
             }
             catch (Exception ex)
             {
-                throw new Exception("Error occured during update operation: \n" + ex.Message);
+                throw new Exception("Error occured during move operation: \n" + ex.Message);
             }
         }
 

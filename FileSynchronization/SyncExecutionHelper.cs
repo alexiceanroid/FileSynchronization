@@ -90,13 +90,10 @@ namespace FileSynchronization
             
             var filePairAction = new FilePairAction(firstFileExtended, secondFileExtended);
 
-            
 
-            FileExtended sourceFile =
-                firstFileExtended.fileType == FileType.Source ? firstFileExtended : secondFileExtended;
-            FileExtended destFile =
-                secondFileExtended.fileType == FileType.Destination ? 
-                    secondFileExtended : firstFileExtended;
+
+            FileExtended sourceFile = GetSourceAndDestFile(firstFileExtended, secondFileExtended)[FileType.Source];
+            FileExtended destFile = GetSourceAndDestFile(firstFileExtended, secondFileExtended)[FileType.Destination];
 
             // handle deletions
             bool deletion = IdentifyDeletion(sourceFile, destFile, filePairAction);
@@ -125,7 +122,9 @@ namespace FileSynchronization
 
 
             IdentifyRenameMove(sourceFile, oldSourceFile, destFile, oldDestFile, filePairAction);
-            if(filePairAction.actionType == ActionType.Rename
+            if(filePairAction.actionType == ActionType.RenameMove
+                ||
+                filePairAction.actionType == ActionType.Rename
                 ||
                filePairAction.actionType == ActionType.Move
                 ||
@@ -291,6 +290,26 @@ namespace FileSynchronization
             }
 
             return res;
+        }
+
+        internal void UpdateFileInMapping(FileExtended oldFile, FileExtended newFile)
+        {
+            FileExtended counterpartFile;
+            if (FileMappingFromCsv.ContainsKey(oldFile))
+            {
+                counterpartFile = FileMappingFromCsv[oldFile];
+                FileMappingFromCsv.Remove(oldFile);
+                FileMappingFromCsv.Add(newFile,counterpartFile);
+            }
+            else if (FileMappingFromCsv.ContainsValue(oldFile))
+            {
+                counterpartFile = FileMappingFromCsv.FirstOrDefault(x => x.Value == oldFile).Key;
+                FileMappingFromCsv[counterpartFile] = newFile;
+            }
+            else
+            {
+                throw new Exception("Could not find specified file in mapping: \n" + oldFile.fullPath);
+            }
         }
     }
 }
