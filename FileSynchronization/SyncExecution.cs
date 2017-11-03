@@ -45,43 +45,7 @@ namespace FileSynchronization
             }
         }
 
-        internal void DisplayActionsList()
-        {
-            string direction;
-            string source;
-            string dest;
-
-
-            Console.WriteLine("\nList of actions to perform: ");
-            foreach (var action in _actionList)
-            {
-                switch (action.ActionDirection)
-                {
-                    case Direction.None:
-                        direction = "==";
-                        break;
-                    case Direction.SourceToDestination:
-                        direction = "=>";
-                        break;
-                    case Direction.DestinationToSource:
-                        direction = "<=";
-                        break;
-                    case Direction.Unknown:
-                        direction = "??";
-                        break;
-                    default:
-                        throw new Exception("Ivalid direction");
-                }
-
-                var filesDict = GetSourceAndDestFile(action.File1,action.File2);
-                source = filesDict[FileType.Source] != null ? filesDict[FileType.Source].fullPath : "";
-                dest = filesDict[FileType.Destination] != null ?  filesDict[FileType.Destination].fullPath : "";
-
-                Console.WriteLine(source + " " + 
-                    direction + " " + action.ActionType + " " + direction + " " +
-                    dest);
-            }
-        }
+        public List<FilePairAction> ActionsList => _actionList;
 
         public Dictionary<FileExtended, FileExtended> FileMapping =>
             //(Dictionary<FileExtended, FileExtended>) 

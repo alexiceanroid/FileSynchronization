@@ -13,17 +13,15 @@ using System.Threading.Tasks;
 namespace FileSynchronization
 {
 
-    internal static class Init
+    public static class Init
     {
-        private static int _sourceFilesProcessed = 0;
         private static int _totalSourceFilesCount = 0;
-        private static int _destFilesProcessed = 0;
         private static int _totalDestFilesCount = 0;
         private static string _additonalMappingFromPaths = "No";
         
         private static int _fileMappingCountPaths = 0;
 
-        internal static void InitializeFiles(SyncExecution syncExec)
+        public static void InitializeFiles(SyncExecution syncExec)
         {
             var folderMappings = syncExec.SyncConfig.FolderMappings;
             var watchInitFiles = new Stopwatch();
@@ -120,7 +118,7 @@ namespace FileSynchronization
 
         
 
-        internal static SyncConfig InitializeFolderMappings()
+        public static SyncConfig InitializeFolderMappings()
         {
             SyncConfig confInstance = new SyncConfig();
             try
@@ -194,7 +192,7 @@ namespace FileSynchronization
             }
         }
 
-        internal static void InitFileMapping(SyncExecution syncExec)
+        public static void InitFileMapping(SyncExecution syncExec)
         {
             var watchFileMapping = new Stopwatch();
             Console.WriteLine("\nStarting preparing file mapping...");

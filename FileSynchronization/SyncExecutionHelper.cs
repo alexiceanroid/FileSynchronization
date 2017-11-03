@@ -314,16 +314,17 @@ namespace FileSynchronization
 
         internal void DisplaySyncProcessStats()
         {
-            int filesProcessed = filesCreated + filesDeleted + filesMoved + filesRenamed + filesUpdated;
+            int filesProcessed = filesCreated + filesDeleted + filesRenamedMoved 
+                + filesMoved + filesRenamed + filesUpdated;
             if (filesProcessed > 1)
             {
                 Console.SetCursorPosition(0, Console.CursorTop - 5);
             }
-            Console.Write("\rfiles created:           " + filesCreated + ";\n"
-                          + "files updated:           " + filesUpdated + ";\n"
-                          + "files renamed and moved: " + filesRenamed + ";\n"
-                          + "files renamed:           " + filesRenamed + ";\n"
-                          + "files moved:             " + filesMoved + ";\n"
+            Console.Write("\rfiles created:           " + filesCreated + "\n"
+                          + "files updated:           " + filesUpdated + "\n"
+                          + "files renamed and moved: " + filesRenamedMoved + "\n"
+                          + "files renamed:           " + filesRenamed + "\n"
+                          + "files moved:             " + filesMoved + "\n"
                           + "files deleted:           " + filesDeleted);
         }
     }

@@ -130,7 +130,7 @@ namespace FileSynchronization
             }
         }
 
-        private Dictionary<FileType, FileExtended> GetSourceAndDestFile(FileExtended file1, FileExtended file2)
+        public Dictionary<FileType, FileExtended> GetSourceAndDestFile(FileExtended file1, FileExtended file2)
         {
             var files = new Dictionary<FileType, FileExtended>();
             FileExtended sourceFile;

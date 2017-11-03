@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{8DAC8A02-0F4A-45DA-9802-DD3EF008DD63}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>FileSynchronization</RootNamespace>
-    <AssemblyName>FileSynchronization</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <ProjectGuid>{0E2D30E4-7CF4-43B7-A9A1-1154E86C92CE}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ConsoleInterface</RootNamespace>
+    <AssemblyName>ConsoleInterface</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
@@ -31,9 +31,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -45,24 +42,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CsvFileReader.cs" />
-    <Compile Include="CsvFileWriter.cs" />
-    <Compile Include="DirectoryFilesProcessing.cs" />
-    <Compile Include="DriveHelper.cs" />
-    <Compile Include="FileExtended.cs" />
-    <Compile Include="FilePairAction.cs" />
-    <Compile Include="Kernel32.cs" />
-    <Compile Include="SyncActionHelper.cs" />
-    <Compile Include="SyncConfig.cs" />
-    <Compile Include="Init.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SyncExecution.cs" />
-    <Compile Include="SyncExecutionHelper.cs" />
-    <Compile Include="CSVHelper.cs" />
-    <Compile Include="WorkingWithFiles.cs" />
+    <Compile Include="SyncHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FileSynchronization\FileSynchronization.csproj">
+      <Project>{8dac8a02-0f4a-45da-9802-dd3ef008dd63}</Project>
+      <Name>FileSynchronization</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
