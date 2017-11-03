@@ -8,15 +8,17 @@ namespace FileSynchronization
 {
     public class FilePairAction
     {
-        public FileExtended _file1;
-        public FileExtended _file2;
-        public ActionType actionType { get; set; }
-        public Direction actionDirection { get; set; }
+        public FileExtended File1;
+        public FileExtended File2;
+        public ActionType ActionType { get; set; }
+        public Direction ActionDirection { get; set; }
+        public bool? SyncSuccess { get; set; }
+        public string ExceptionMessage { get; set; }
 
         public FilePairAction(FileExtended file1, FileExtended file2)
         {
-            this._file1 = file1;
-            this._file2 = file2;
+            this.File1 = file1;
+            this.File2 = file2;
         }
     }
 

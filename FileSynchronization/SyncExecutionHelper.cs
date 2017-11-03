@@ -15,11 +15,11 @@ namespace FileSynchronization
         {
             bool res = false;
             // Action = Create
-            if (filePairAction._file2 == null)
+            if (filePairAction.File2 == null)
             {
                 res = true;
-                filePairAction.actionType = ActionType.Create;
-                filePairAction.actionDirection = filePairAction._file1.fileType == FileType.Source ? 
+                filePairAction.ActionType = ActionType.Create;
+                filePairAction.ActionDirection = filePairAction.File1.fileType == FileType.Source ? 
                     Direction.SourceToDestination : Direction.DestinationToSource;
             }
             return res;
@@ -31,8 +31,8 @@ namespace FileSynchronization
         private bool UpdateMark(FilePairAction filePairAction)
         {
             bool res = false;
-            var file1 = filePairAction._file1;
-            var file2 = filePairAction._file2;
+            var file1 = filePairAction.File1;
+            var file2 = filePairAction.File2;
             // Action = Update
             DateTime file1LastUpdatedOn = DateTime.Parse(file1.lastWriteDateTime, CultureInfo.InvariantCulture);
             DateTime file2LastUpdatedOn = DateTime.Parse(file2.lastWriteDateTime, CultureInfo.InvariantCulture);
@@ -40,14 +40,14 @@ namespace FileSynchronization
                 || file1LastUpdatedOn.TimeOfDay != file2LastUpdatedOn.TimeOfDay)
             {
                 res = true;
-                filePairAction.actionType = ActionType.Update;
+                filePairAction.ActionType = ActionType.Update;
                 if (file1LastUpdatedOn > file2LastUpdatedOn)
                 {
-                    filePairAction.actionDirection = file1.fileType == FileType.Source ? Direction.SourceToDestination : Direction.DestinationToSource;
+                    filePairAction.ActionDirection = file1.fileType == FileType.Source ? Direction.SourceToDestination : Direction.DestinationToSource;
                 }
                 else
                 {
-                    filePairAction.actionDirection = file1.fileType == FileType.Source ? Direction.DestinationToSource : Direction.SourceToDestination;
+                    filePairAction.ActionDirection = file1.fileType == FileType.Source ? Direction.DestinationToSource : Direction.SourceToDestination;
                 }
                 
             }
@@ -63,9 +63,9 @@ namespace FileSynchronization
 
             foreach (var entry in _actionList)
             {
-                if(filePairAction._file1 == entry._file1
+                if(filePairAction.File1 == entry.File1
                     &&
-                    filePairAction._file2 == entry._file2)
+                    filePairAction.File2 == entry.File2)
                 {
                     filePairAddedAlready = true;
                     break;
@@ -76,8 +76,8 @@ namespace FileSynchronization
             if (filePairAddedAlready)
             {
                 string mes = "The actions list already contains this file combination:\n" +
-                             "\t source file:      " + filePairAction._file1.fullPath + "\n" +
-                             "\t destination file: " + filePairAction._file2.fullPath;
+                             "\t source file:      " + filePairAction.File1.fullPath + "\n" +
+                             "\t destination file: " + filePairAction.File2.fullPath;
 
                 throw new Exception(mes);
             }
@@ -122,13 +122,13 @@ namespace FileSynchronization
 
 
             IdentifyRenameMove(sourceFile, oldSourceFile, destFile, oldDestFile, filePairAction);
-            if(filePairAction.actionType == ActionType.RenameMove
+            if(filePairAction.ActionType == ActionType.RenameMove
                 ||
-                filePairAction.actionType == ActionType.Rename
+                filePairAction.ActionType == ActionType.Rename
                 ||
-               filePairAction.actionType == ActionType.Move
+               filePairAction.ActionType == ActionType.Move
                 ||
-               filePairAction.actionType == ActionType.Delete)
+               filePairAction.ActionType == ActionType.Delete)
             { _actionList.Add(filePairAction);}
         }
 
@@ -154,25 +154,25 @@ namespace FileSynchronization
                 )
 
             {
-                filePairAction.actionType = ActionType.RenameMove;
+                filePairAction.ActionType = ActionType.RenameMove;
 
                 if (sourceFile.fullPath != oldSourceFile.fullPath
                     &&
                     destFile.fullPath == oldDestFile.fullPath)
                 {
-                    filePairAction.actionDirection = Direction.SourceToDestination;
+                    filePairAction.ActionDirection = Direction.SourceToDestination;
                 }
                 else if (sourceFile.fullPath == oldSourceFile.fullPath
                          &&
                          destFile.fullPath != oldDestFile.fullPath)
                 {
-                    filePairAction.actionDirection = Direction.DestinationToSource;
+                    filePairAction.ActionDirection = Direction.DestinationToSource;
                 }
                 else if (sourceFile.fullPath != oldSourceFile.fullPath
                          &&
                          destFile.fullPath != oldDestFile.fullPath)
                 {
-                    filePairAction.actionDirection = Direction.Unknown;
+                    filePairAction.ActionDirection = Direction.Unknown;
                 }
 
                 return;
@@ -182,22 +182,22 @@ namespace FileSynchronization
             if (sourceName != oldSourceName
                 || destName != oldDestName)
             {
-                filePairAction.actionType = ActionType.Rename;
+                filePairAction.ActionType = ActionType.Rename;
 
                 if (sourceName != oldSourceName
                     && destName == oldDestName)
                 {
-                    filePairAction.actionDirection = Direction.SourceToDestination;
+                    filePairAction.ActionDirection = Direction.SourceToDestination;
                 }
                 else if (sourceName == oldSourceName
                          && destName != oldDestName)
                 {
-                    filePairAction.actionDirection = Direction.DestinationToSource;
+                    filePairAction.ActionDirection = Direction.DestinationToSource;
                 }
                 else if (sourceName != oldSourceName
                          && destName != oldDestName)
                 {
-                    filePairAction.actionDirection = Direction.Unknown;
+                    filePairAction.ActionDirection = Direction.Unknown;
                 }
                 return;
             }
@@ -206,22 +206,22 @@ namespace FileSynchronization
             if (sourceDirectory != oldSourceDirectory
                 || destDirectory != oldDestDirectory)
             {
-                filePairAction.actionType = ActionType.Move;
+                filePairAction.ActionType = ActionType.Move;
 
                 if (sourceDirectory != oldSourceDirectory
                     && destDirectory == oldDestDirectory)
                 {
-                    filePairAction.actionDirection = Direction.SourceToDestination;
+                    filePairAction.ActionDirection = Direction.SourceToDestination;
                 }
                 else if (sourceDirectory == oldSourceDirectory
                          && destDirectory != oldDestDirectory)
                 {
-                    filePairAction.actionDirection = Direction.DestinationToSource;
+                    filePairAction.ActionDirection = Direction.DestinationToSource;
                 }
                 else if (sourceDirectory != oldSourceDirectory
                          && destDirectory != oldDestDirectory)
                 {
-                    filePairAction.actionDirection = Direction.Unknown;
+                    filePairAction.ActionDirection = Direction.Unknown;
                 }
             }
         }
@@ -233,14 +233,14 @@ namespace FileSynchronization
 
             if (sourceFile == null && destFile != null)
             {
-                filePairAction.actionType = ActionType.Delete;
-                filePairAction.actionDirection = Direction.SourceToDestination;
+                filePairAction.ActionType = ActionType.Delete;
+                filePairAction.ActionDirection = Direction.SourceToDestination;
                 res = true;
             }
             else if (sourceFile != null && destFile == null)
             {
-                filePairAction.actionType = ActionType.Delete;
-                filePairAction.actionDirection = Direction.DestinationToSource;
+                filePairAction.ActionType = ActionType.Delete;
+                filePairAction.ActionDirection = Direction.DestinationToSource;
                 res = true;
             }
             return res;
@@ -280,9 +280,9 @@ namespace FileSynchronization
             bool res = false;
             foreach (var action in _actionList)
             {
-                if ((action._file1 == filePair.Key && action._file2 == filePair.Value)
+                if ((action.File1 == filePair.Key && action.File2 == filePair.Value)
                     ||
-                    (action._file1 == filePair.Value && action._file2 == filePair.Key))
+                    (action.File1 == filePair.Value && action.File2 == filePair.Key))
                 {
                     res = true;
                     break;
@@ -314,16 +314,17 @@ namespace FileSynchronization
 
         internal void DisplaySyncProcessStats()
         {
-            int filesProcessed = FilesCreated + FilesDeleted + FilesMoved + FilesRenamed + FilesUpdated;
+            int filesProcessed = filesCreated + filesDeleted + filesMoved + filesRenamed + filesUpdated;
             if (filesProcessed > 1)
             {
-                Console.SetCursorPosition(0, Console.CursorTop - 4);
+                Console.SetCursorPosition(0, Console.CursorTop - 5);
             }
-            Console.Write("\rfiles created: " + FilesCreated + ";\n"
-                          + "files updated: " + FilesUpdated + ";\n"
-                          + "files renamed: " + FilesRenamed + ";\n"
-                          + "files moved:   " + FilesMoved + ";\n"
-                          + "files deleted: " + FilesDeleted);
+            Console.Write("\rfiles created:           " + filesCreated + ";\n"
+                          + "files updated:           " + filesUpdated + ";\n"
+                          + "files renamed and moved: " + filesRenamed + ";\n"
+                          + "files renamed:           " + filesRenamed + ";\n"
+                          + "files moved:             " + filesMoved + ";\n"
+                          + "files deleted:           " + filesDeleted);
         }
     }
 }

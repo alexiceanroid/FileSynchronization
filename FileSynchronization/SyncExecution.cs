@@ -14,11 +14,12 @@ namespace FileSynchronization
         private List<FilePairAction> _actionList;
         public readonly SyncConfig SyncConfig;
 
-        public int FilesCreated { get; set; }
-        public int FilesUpdated { get; set; }
-        public int FilesRenamed { get; set; }
-        public int FilesMoved { get; set; }
-        public int FilesDeleted { get; set; }
+        private int filesCreated { get; set; }
+        private int filesUpdated { get; set; }
+        private int filesRenamedMoved { get; set; }
+        private int filesRenamed { get; set; }
+        private int filesMoved { get; set; }
+        private int filesDeleted { get; set; }
 
         public List<FileExtended> SourceFiles { get; set; }
         public List<FileExtended> DestFiles { get; set; }
@@ -39,7 +40,7 @@ namespace FileSynchronization
         {
             get
             {
-                int numOfChanges = _actionList.FindAll(x => x.actionType != ActionType.None).Count;
+                int numOfChanges = _actionList.FindAll(x => x.ActionType != ActionType.None).Count;
                 return numOfChanges > 0;
             }
         }
@@ -54,7 +55,7 @@ namespace FileSynchronization
             Console.WriteLine("\nList of actions to perform: ");
             foreach (var action in _actionList)
             {
-                switch (action.actionDirection)
+                switch (action.ActionDirection)
                 {
                     case Direction.None:
                         direction = "==";
@@ -72,12 +73,12 @@ namespace FileSynchronization
                         throw new Exception("Ivalid direction");
                 }
 
-                var filesDict = GetSourceAndDestFile(action._file1,action._file2);
+                var filesDict = GetSourceAndDestFile(action.File1,action.File2);
                 source = filesDict[FileType.Source] != null ? filesDict[FileType.Source].fullPath : "";
                 dest = filesDict[FileType.Destination] != null ?  filesDict[FileType.Destination].fullPath : "";
 
                 Console.WriteLine(source + " " + 
-                    direction + " " + action.actionType + " " + direction + " " +
+                    direction + " " + action.ActionType + " " + direction + " " +
                     dest);
             }
         }
@@ -272,7 +273,7 @@ namespace FileSynchronization
         public void PerformActions()
         {
             Console.WriteLine();
-            var actionsToPerform = _actionList.FindAll(x => x.actionType != ActionType.None);
+            var actionsToPerform = _actionList.FindAll(x => x.ActionType != ActionType.None);
             if (actionsToPerform.Count == 0)
             {
                 Console.WriteLine("No changes have been detected - no actions needed");
@@ -285,48 +286,50 @@ namespace FileSynchronization
             Console.WriteLine("Starting synchronization....");
             foreach (var action in actionsToPerform)
             {
-                var filesDict = GetSourceAndDestFile(action._file1, action._file2);
+                var filesDict = GetSourceAndDestFile(action.File1, action.File2);
                 FileExtended sourceFile = filesDict[FileType.Source];
                 FileExtended destFile = filesDict[FileType.Destination];
 
-                switch (action.actionType)
+                try
                 {
+                    switch (action.ActionType)
+                    {
 
-                    case ActionType.Create:
-                        ActionCreate(sourceFile,destFile,action.actionDirection);
-                        FilesCreated++;
-                        DisplaySyncProcessStats();
-                        break;
-                    
-                case ActionType.Update:
-                    ActionUpdate(sourceFile, destFile, action.actionDirection);
-                    FilesUpdated++;
-                    DisplaySyncProcessStats();
-                        break;
+                        case ActionType.Create:
+                            ActionCreate(sourceFile, destFile, action.ActionDirection);
+                            filesCreated++;
+                            DisplaySyncProcessStats();
+                            break;
 
-                case ActionType.RenameMove:
-                    ActionRenameMove(sourceFile, destFile, action.actionDirection);
-                    FilesMoved++;
-                    DisplaySyncProcessStats();
-                        break;
+                        case ActionType.Update:
+                            ActionUpdate(sourceFile, destFile, action.ActionDirection);
+                            filesUpdated++;
+                            DisplaySyncProcessStats();
+                            break;
 
-                case ActionType.Rename:
-                    ActionRenameMove(sourceFile, destFile, action.actionDirection);
-                    FilesRenamed++;
-                    DisplaySyncProcessStats();
-                        break;
+                        case ActionType.RenameMove:
+                            ActionRenameMove(sourceFile, destFile, action.ActionDirection);
+                            filesRenamedMoved++;
+                            DisplaySyncProcessStats();
+                            break;
 
-                case ActionType.Move:
-                    ActionRenameMove(sourceFile, destFile, action.actionDirection);
-                    FilesMoved++;
-                    DisplaySyncProcessStats();
-                        break;
+                        case ActionType.Rename:
+                            ActionRenameMove(sourceFile, destFile, action.ActionDirection);
+                            filesRenamed++;
+                            DisplaySyncProcessStats();
+                            break;
 
-                case ActionType.Delete:
-                    ActionDelete(sourceFile,destFile,action.actionDirection);
-                    FilesDeleted++;
-                    DisplaySyncProcessStats();
-                        break;
+                        case ActionType.Move:
+                            ActionRenameMove(sourceFile, destFile, action.ActionDirection);
+                            filesMoved++;
+                            DisplaySyncProcessStats();
+                            break;
+
+                        case ActionType.Delete:
+                            ActionDelete(sourceFile, destFile, action.ActionDirection);
+                            filesDeleted++;
+                            DisplaySyncProcessStats();
+                            break;
 
                         /*
                     case ActionType.None:
@@ -334,8 +337,15 @@ namespace FileSynchronization
                         break;
 
                     default:
-                        throw new Exception("Invalid file pair action: " + action.actionType);
+                        throw new Exception("Invalid file pair action: " + action.ActionType);
                         */
+                    }
+                    action.SyncSuccess = true;
+                }
+                catch (Exception ex)
+                {
+                    action.SyncSuccess = false;
+                    action.ExceptionMessage = ex.Message;
                 }
             }
             syncWatch.Stop();
