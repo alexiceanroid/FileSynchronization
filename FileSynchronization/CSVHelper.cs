@@ -12,16 +12,13 @@ namespace FileSynchronization
     public static class CSVHelper
     {
         
-        static readonly AppSettingsReader configReader = new AppSettingsReader();
-        private static readonly string fileMappingCsvFile = "FileID_mappings_"+Environment.MachineName;
-        static readonly string fileMappingCsvLocation = (string)configReader.GetValue(fileMappingCsvFile, typeof(string));
-
+        
         // the assumption is that CSV file has the following structure:
         // <firstFileType>,<firstBasePath>,<firstFileFullPath>,<firstFileId>,
         //    <secondFileType>,<secondBasePath>,<secondFullPath>,<secondFileId>
         public static void InitFileMappingFromCsv(SyncExecution syncExec)
         {
-
+            string fileMappingCsvLocation = syncExec.SyncConfig.MappingCsvFileName;
             var linesRead = 0;
             if (File.Exists(fileMappingCsvLocation))
             {
@@ -120,6 +117,7 @@ namespace FileSynchronization
             // Write data to CSV file
 
             var fileMapping = syncExec.FileMapping;
+            string fileMappingCsvLocation = syncExec.SyncConfig.MappingCsvFileName;
             using (var writer = new CsvFileWriter(fileMappingCsvLocation))
             {
                 foreach (var filePair in fileMapping)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ namespace ConsoleInterface
     {
         static void Main(string[] args)
         {
+            
             Console.WriteLine("Starting the FileSync app... \n"
                 + "If you want to stop its execution at any time, please, press CTRL+C");
 
@@ -23,7 +25,8 @@ namespace ConsoleInterface
             };
 
             // read and initialize source and destination folders:
-            SyncConfig confInstance = Init.InitializeFolderMappings();
+            var confInstance = new SyncConfig();
+            confInstance.InitializeFolderMappings();
 
             var syncExec = new SyncExecution(confInstance);
             syncExec = PrepareSyncExec(syncExec);
@@ -31,7 +34,6 @@ namespace ConsoleInterface
             syncExec.AppendActionList();
 
             //SyncHelper.DisplayActionsList(syncExec);
-            Console.WriteLine();
             SyncHelper.PreviewChanges(syncExec);
             string proceedWithSync = "";
             while (proceedWithSync != "yes" && proceedWithSync != "no")
@@ -41,6 +43,7 @@ namespace ConsoleInterface
                 if (proceedWithSync == "yes")
                 {
                     syncExec.PerformActions();
+                    //SyncHelper.DisplayFailedActions(syncExec);
 
                     if (syncExec.AnyChangesNeeded)
                         CSVHelper.SaveFileMappingToCsv(syncExec);
@@ -55,6 +58,8 @@ namespace ConsoleInterface
             Console.WriteLine("Execution completed! Press any key to exit");
             if(Console.ReadKey() != null)
                 Environment.Exit(0);
+
+            
         }
 
 
@@ -70,5 +75,7 @@ namespace ConsoleInterface
 
             return syncExec;
         }
+
+        
     }
 }

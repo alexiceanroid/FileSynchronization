@@ -51,6 +51,7 @@ namespace ConsoleInterface
 
         internal static void PreviewChanges(SyncExecution syncExec)
         {
+            Console.WriteLine("\n");
             int filesToCreate = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.Create).Count;
             int filesToUpdate = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.Update).Count;
             int filesToRenameMove = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.RenameMove).Count;
@@ -64,6 +65,26 @@ namespace ConsoleInterface
             Console.WriteLine("Files to rename:            " + filesToRename);
             Console.WriteLine("Files to move:              " + filesToMove);
             Console.WriteLine("Files to delete:            " + filesToDelete);
+        }
+
+        internal static void DisplayFailedActions(SyncExecution syncExec)
+        {
+            if (syncExec.FailedActions.Count > 0)
+            {
+                var failedActions = new List<FilePairAction>(syncExec.FailedActions);
+                failedActions.Sort();
+                Console.WriteLine("\n");
+                Console.WriteLine(failedActions.Count + 
+                    " actions could not be performed:");
+                foreach (var action in failedActions)
+                {
+                    Console.WriteLine("\taction: " + action.ActionType);
+                    Console.WriteLine("\tfile1:  " + action.File1.fullPath);
+                    Console.WriteLine("\tfile2:  " + action.File2.fullPath);
+                    Console.WriteLine("\treason: " + action.ExceptionMessage);
+                    Console.WriteLine();
+                }
+            }
         }
     }
 }

@@ -61,7 +61,7 @@ namespace FileSynchronization
         {
             bool filePairAddedAlready = false;
 
-            foreach (var entry in _actionList)
+            foreach (var entry in actionList)
             {
                 if(filePairAction.File1 == entry.File1
                     &&
@@ -81,7 +81,7 @@ namespace FileSynchronization
 
                 throw new Exception(mes);
             }
-            _actionList.Add(filePairAction);
+            actionList.Add(filePairAction);
         }
 
         public void AppendActionListWithDeleteRenameMove(FileExtended firstFileExtended, FileExtended secondFileExtended, 
@@ -99,7 +99,7 @@ namespace FileSynchronization
             bool deletion = IdentifyDeletion(sourceFile, destFile, filePairAction);
             if (deletion)
             {
-                _actionList.Add(filePairAction);
+                actionList.Add(filePairAction);
                 return;
             }
 
@@ -129,7 +129,7 @@ namespace FileSynchronization
                filePairAction.ActionType == ActionType.Move
                 ||
                filePairAction.ActionType == ActionType.Delete)
-            { _actionList.Add(filePairAction);}
+            { actionList.Add(filePairAction);}
         }
 
         private void IdentifyRenameMove(FileExtended sourceFile, FileExtended oldSourceFile,
@@ -278,7 +278,7 @@ namespace FileSynchronization
         internal bool ActionListContainsFilePair(KeyValuePair<FileExtended,FileExtended> filePair)
         {
             bool res = false;
-            foreach (var action in _actionList)
+            foreach (var action in actionList)
             {
                 if ((action.File1 == filePair.Key && action.File2 == filePair.Value)
                     ||

@@ -36,6 +36,7 @@ namespace FileSynchronization
                 _totalDestFilesCount += Directory.GetFiles(pair.Value, "*.*", SearchOption.AllDirectories).Length;
             }
 
+            Console.WriteLine("\n");
             Console.WriteLine("Starting populating source and destination files lists...");
 
             Task[] populatingFilesTask = new Task[2];
@@ -118,39 +119,39 @@ namespace FileSynchronization
 
         
 
-        public static SyncConfig InitializeFolderMappings()
-        {
-            SyncConfig confInstance = new SyncConfig();
-            try
-            {
-                var configReader = new AppSettingsReader();
-                string configLocation = (string)configReader.GetValue("ConfigFile_"+Environment.MachineName, typeof(string));
-                confInstance.AppConfigLocation = configLocation;
+        //public static SyncConfig InitializeFolderMappings()
+        //{
+        //    SyncConfig confInstance = new SyncConfig();
+        //    try
+        //    {
+        //        var configReader = new AppSettingsReader();
+        //        string configLocation = (string)configReader.GetValue("ConfigFile_"+Environment.MachineName, typeof(string));
+        //        confInstance.AppConfigLocation = configLocation;
 
 
-                XElement root = XElement.Load(configLocation);
+        //        XElement root = XElement.Load(configLocation);
 
 
-                IEnumerable<XElement> mappingCollection = from m in root.Element("mappings").Elements("mapping")
-                                                          select m;
+        //        IEnumerable<XElement> mappingCollection = from m in root.Element("mappings").Elements("mapping")
+        //                                                  select m;
 
-                foreach (XElement el in mappingCollection)
-                {
-                    string sourceFolder = el.Element("SourceFolder").Value;
-                    string sourceFolderResolved = DriveHelper.ResolvePath(sourceFolder);
-                    string destFolder = el.Element("DestinationFolder").Value;
-                    string destFolderResolved = DriveHelper.ResolvePath(destFolder);
-                    confInstance.FolderMappings.Add(sourceFolderResolved, destFolderResolved);
-                }
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+        //        foreach (XElement el in mappingCollection)
+        //        {
+        //            string sourceFolder = el.Element("SourceFolder").Value;
+        //            string sourceFolderResolved = DriveHelper.ResolvePath(sourceFolder);
+        //            string destFolder = el.Element("DestinationFolder").Value;
+        //            string destFolderResolved = DriveHelper.ResolvePath(destFolder);
+        //            confInstance.FolderMappings.Add(sourceFolderResolved, destFolderResolved);
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        throw e;
+        //    }
 
-            return confInstance;
+        //    return confInstance;
 
-        }
+        //}
 
         
 
@@ -160,30 +161,59 @@ namespace FileSynchronization
             
             if (syncExec.SourceFiles.Count > 0)
             {
+                // launch timer
                 var watchAddMissingFilesToMapping = new Stopwatch();
                 watchAddMissingFilesToMapping.Start();
+
                 var sourceFiles = syncExec.SourceFiles;
                 var destFiles = syncExec.DestFiles;
+                int expectedFileMappingEntriesCount = (new int[] {sourceFiles.Count, destFiles.Count}).Max();
+                int completionPercentage;
                 var fileMappingFromPaths = syncExec.FileMappingFromPaths;
-                var fileMapping = syncExec.FileMapping;
+
+                var sourceFilesWithoutCounterpart = new List<FileExtended>(sourceFiles);
+                var destFilesWithoutCounterpart = new List<FileExtended>(destFiles);
 
                 Console.WriteLine();
                 Console.WriteLine("\tStarting populating missing FileMapping from paths:");
-                foreach (var missingFile in syncExec.FilesMissingInMapping)
+                if (syncExec.FilesMissingInMapping.Count > 0)
                 {
                     _additonalMappingFromPaths = "Yes";
-                        
-                    fileMappingFromPaths.Add(missingFile, syncExec.GetFileCounterpart(missingFile));
-                    _fileMappingCountPaths++;
-                    Console.Write($"\r\tadded {_fileMappingCountPaths} file mappings from paths");
-
-                    if (syncExec.FilesMissingInMapping.Count == 0)
-                        break;
                 }
+
+                // append file mapping from paths with all intersecting source and destination files combinations
+                var intersectionMapping = from s in sourceFiles
+                    join d in destFiles
+                        on s.RelativePath equals d.RelativePath
+                    select new {file1 = s, file2 = d};
                 
-                
-                Console.WriteLine("\n\tfinished populating missing FileMapping from paths. Added " + fileMappingFromPaths.Count + " entries.");
-                Console.WriteLine("\telapsed time: "+FormatTime(watchAddMissingFilesToMapping.ElapsedMilliseconds));
+                foreach (var filePair in intersectionMapping)
+                {
+                    fileMappingFromPaths.Add(filePair.file1,filePair.file2);
+                    sourceFilesWithoutCounterpart.Remove(filePair.file1);
+                    destFilesWithoutCounterpart.Remove(filePair.file2);
+
+                    FileMappingCompletionInfo(expectedFileMappingEntriesCount);
+                }
+
+                // append the mapping with source files for which no destination match has been found
+                foreach (var s in sourceFilesWithoutCounterpart)
+                {
+                    fileMappingFromPaths.Add(s, null);
+                    
+                    FileMappingCompletionInfo(expectedFileMappingEntriesCount);
+                }
+
+                // append the mapping with destination files for which no source match has been found
+                foreach (var d in destFilesWithoutCounterpart)
+                {
+                    fileMappingFromPaths.Add(d, null);
+
+                    FileMappingCompletionInfo(expectedFileMappingEntriesCount);
+                }
+
+                Console.Write("\r\tfinished populating missing FileMapping from paths. Added " + fileMappingFromPaths.Count + " entries.");
+                Console.WriteLine("\n\telapsed time: "+FormatTime(watchAddMissingFilesToMapping.ElapsedMilliseconds));
 
             }
             else
@@ -222,6 +252,21 @@ namespace FileSynchronization
             watchFileMapping.Stop();
             Console.WriteLine("File mapping complete!");
             Console.WriteLine($"elapsed time: {FormatTime(watchFileMapping.ElapsedMilliseconds)}");
+        }
+
+        private static void FileMappingCompletionInfo(int expectedFileMappingEntriesCount)
+        {
+            _fileMappingCountPaths++;
+            int completionPercentage =
+                (int)Math.Round(100 * (decimal)_fileMappingCountPaths /
+                                expectedFileMappingEntriesCount);
+            if (completionPercentage < 100)
+            {
+                //completionPercentage = 100;
+                Console.Write("\t\radded " + _fileMappingCountPaths +
+                              " entries to file mapping. Completion percentage: "
+                              + completionPercentage + "%");
+            }
         }
     }
 }

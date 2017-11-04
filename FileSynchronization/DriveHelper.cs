@@ -9,44 +9,55 @@ namespace FileSynchronization
 {
     public static class DriveHelper
     {
-        public static string ResolvePath(string folderPath)
+        public static string ResolvePath(SyncConfig confInstance, string folderPath)
         {
-            
-            string resPath;
+            string resPath = null;
             string volLetter;
-            int volLabelendInd = folderPath.IndexOfAny(new char[] {':','\\'});
-
-            // if volLabelendInd == 1 it means that volume label is not used 
-            // and the input path should be returned 'as-is'
-            if (volLabelendInd > 1)
+            try
             {
-                string volLabel = folderPath.Substring(0, volLabelendInd);
 
+                int volLabelendInd = folderPath.IndexOfAny(new char[] {':', '\\'});
 
-
-                DriveInfo[] allDrives = DriveInfo.GetDrives();
-                try
+                // if volLabelendInd == 1 it means that volume label is not used 
+                // and the input path should be returned 'as-is'
+                if (volLabelendInd > 1)
                 {
-                    volLetter = allDrives.FirstOrDefault(x => x.VolumeLabel == volLabel).Name;
+                    string volLabel = folderPath.Substring(0, volLabelendInd);
+
+
+
+                    DriveInfo[] allDrives = DriveInfo.GetDrives();
+                    try
+                    {
+                        volLetter = allDrives.FirstOrDefault(x => x.VolumeLabel == volLabel).Name;
+                    }
+                    catch (NullReferenceException ex)
+                    {
+                        return null;
+                    }
+
+                    resPath = folderPath.Replace(volLabel, volLetter.Substring(0, 1));
                 }
-                catch (NullReferenceException ex)
+                else
                 {
-                    return null;
+                    resPath = folderPath;
                 }
 
-                resPath = folderPath.Replace(volLabel, volLetter.Substring(0,1));
+                if (!Directory.Exists(resPath))
+                {
+                    throw new DirectoryNotFoundException();
+                }
             }
-            else
+            catch (Exception e)
             {
-                resPath = folderPath;
+                var error = new AppError(DateTime.Now, e.TargetSite.ToString(), 
+                    "resolving path " + folderPath, e.Message);
+                ErrorHandling.WriteErrorLog(confInstance,error);
             }
-
-            if (!Directory.Exists(resPath))
-            {
-                throw new DirectoryNotFoundException();
-            }
+            
 
             return resPath;
+            
         }
 
         

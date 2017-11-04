@@ -49,6 +49,7 @@
     <Compile Include="CsvFileWriter.cs" />
     <Compile Include="DirectoryFilesProcessing.cs" />
     <Compile Include="DriveHelper.cs" />
+    <Compile Include="ErrorHandling.cs" />
     <Compile Include="FileExtended.cs" />
     <Compile Include="FilePairAction.cs" />
     <Compile Include="Kernel32.cs" />

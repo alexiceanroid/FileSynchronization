@@ -11,7 +11,8 @@ namespace FileSynchronization
     public partial class SyncExecution
     {
         public string FileMappingCsvLocation;
-        private List<FilePairAction> _actionList;
+        private List<FilePairAction> actionList;
+        private List<FilePairAction> failedActions;
         public readonly SyncConfig SyncConfig;
 
         private int filesCreated { get; set; }
@@ -21,6 +22,9 @@ namespace FileSynchronization
         private int filesMoved { get; set; }
         private int filesDeleted { get; set; }
 
+
+        public List<FilePairAction> FailedActions => failedActions;
+
         public List<FileExtended> SourceFiles { get; set; }
         public List<FileExtended> DestFiles { get; set; }
         public Dictionary<FileExtended, FileExtended> FileMappingFromCsv { get; set; }
@@ -29,23 +33,24 @@ namespace FileSynchronization
         public SyncExecution(SyncConfig SyncConfig)
         {
             this.SyncConfig = SyncConfig;
-            _actionList = new List<FilePairAction>();
+            actionList = new List<FilePairAction>();
             SourceFiles = new List<FileExtended>();
             DestFiles = new List<FileExtended>();
             FileMappingFromCsv = new Dictionary<FileExtended, FileExtended>();
             FileMappingFromPaths = new Dictionary<FileExtended, FileExtended>();
+            failedActions = new List<FilePairAction>();
         }
 
         public bool AnyChangesNeeded
         {
             get
             {
-                int numOfChanges = _actionList.FindAll(x => x.ActionType != ActionType.None).Count;
+                int numOfChanges = actionList.FindAll(x => x.ActionType != ActionType.None).Count;
                 return numOfChanges > 0;
             }
         }
 
-        public List<FilePairAction> ActionsList => _actionList;
+        public List<FilePairAction> ActionsList => actionList;
 
         public Dictionary<FileExtended, FileExtended> FileMapping =>
             //(Dictionary<FileExtended, FileExtended>) 
@@ -164,6 +169,8 @@ namespace FileSynchronization
             }
         }
 
+        
+
         public FileExtended GetFileByIdOrPath(FileType fileType, string fileId, string fullPath)
         {
             FileExtended resultingFile;
@@ -187,6 +194,8 @@ namespace FileSynchronization
 
         public void AppendActionList()
         {
+            Console.WriteLine("\n");
+            Console.WriteLine("Calculating necessary actions to perform...");
             foreach (var filePair in FileMappingFromPaths)
             {
                 if (ActionListContainsFilePair(filePair))
@@ -237,7 +246,7 @@ namespace FileSynchronization
         public void PerformActions()
         {
             Console.WriteLine();
-            var actionsToPerform = _actionList.FindAll(x => x.ActionType != ActionType.None);
+            var actionsToPerform = actionList.FindAll(x => x.ActionType != ActionType.None);
             if (actionsToPerform.Count == 0)
             {
                 Console.WriteLine("No changes have been detected - no actions needed");
@@ -310,6 +319,7 @@ namespace FileSynchronization
                 {
                     action.SyncSuccess = false;
                     action.ExceptionMessage = ex.Message;
+                    failedActions.Add(action);
                 }
             }
             syncWatch.Stop();
