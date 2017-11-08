@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using FileSynchronization;
 
@@ -33,8 +34,16 @@ namespace ConsoleInterface
 
             syncExec.AppendActionList();
 
-            //SyncHelper.DisplayActionsList(syncExec);
-            SyncHelper.PreviewChanges(syncExec);
+            if (!syncExec.AnyChangesNeeded)
+            {
+                Console.WriteLine("\nNo changes detected");
+                Console.WriteLine("\nPress any key to exit");
+                if (Console.ReadKey() != null)
+                    Environment.Exit(0);
+            }
+
+            SyncHelper.WriteActionsListToLog(syncExec);
+            SyncHelper.PreviewChangesStats(syncExec);
             string proceedWithSync = "";
             while (proceedWithSync != "yes" && proceedWithSync != "no")
             {
@@ -43,7 +52,7 @@ namespace ConsoleInterface
                 if (proceedWithSync == "yes")
                 {
                     syncExec.PerformActions();
-                    //SyncHelper.DisplayFailedActions(syncExec);
+                    SyncHelper.WriteFailedActionsToLog(syncExec);
 
                     if (syncExec.AnyChangesNeeded)
                         CSVHelper.SaveFileMappingToCsv(syncExec);
@@ -51,11 +60,20 @@ namespace ConsoleInterface
                 else if (proceedWithSync == "no")
                 {
                     Console.WriteLine("The synchronization has been cancelled, exiting the app");
+                    Thread.Sleep(1500);
+                    Environment.Exit(0);
                 }
             }
 
-
-            Console.WriteLine("Execution completed! Press any key to exit");
+            if(syncExec.FailedActions.Count > 0)
+                Console.WriteLine("\nSome actions failed: for details, see the error log file -\n" 
+                    + syncExec.SyncConfig.ErrorLogFile);
+            else
+            {
+                if(proceedWithSync == "yes")
+                    Console.WriteLine("Execution completed sucessfully.");
+            }
+            Console.WriteLine("\nPress any key to exit");
             if(Console.ReadKey() != null)
                 Environment.Exit(0);
 

@@ -19,6 +19,8 @@ namespace FileSynchronization
         public static void InitFileMappingFromCsv(SyncExecution syncExec)
         {
             string fileMappingCsvLocation = syncExec.SyncConfig.MappingCsvFileName;
+            int expectedFileMappingCount = Math.Max(syncExec.SourceFiles.Count, syncExec.DestFiles.Count);
+            int completionPercentage = 0;
             var linesRead = 0;
             if (File.Exists(fileMappingCsvLocation))
             {
@@ -79,7 +81,10 @@ namespace FileSynchronization
                             syncExec.AppendActionListWithDeleteRenameMove(firstFileExtended, secondFileExtended, row);
 
                             linesRead++;
-                            Console.Write("\r\tlines read: " + linesRead);
+                            completionPercentage = (int) Math.Round(100 * (double)linesRead 
+                                / expectedFileMappingCount);
+                            Console.Write("\r\tlines read: " + linesRead + "; completion percentage: "
+                                + completionPercentage + "%");
                         }
                     }
                     Console.WriteLine("\n\tcompleted populating filemapping from csv");

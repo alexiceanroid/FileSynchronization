@@ -157,19 +157,11 @@ namespace FileSynchronization
             return FilesMissingInMapping.Count > 0;
         }
 
-        public List<FileExtended> FilesMissingInMapping
-        {
+        public List<FileExtended> FilesMissingInMapping => FilesFromLists.Except(FilesFromMapping).ToList();
 
-            get
-            {
-                List<FileExtended> filesFromLists = SourceFiles.Union(DestFiles).ToList();
-                List<FileExtended> filesFromMapping = FileMapping.Keys.Union(FileMapping.Values).ToList();
+        public List<FileExtended> FilesFromLists => SourceFiles.Union(DestFiles).ToList();
 
-                return filesFromLists.Except(filesFromMapping).ToList();
-            }
-        }
-
-        
+        public List<FileExtended> FilesFromMapping => FileMapping.Keys.Union(FileMapping.Values).ToList();
 
         public FileExtended GetFileByIdOrPath(FileType fileType, string fileId, string fullPath)
         {

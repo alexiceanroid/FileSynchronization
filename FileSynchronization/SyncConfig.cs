@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace FileSynchronization
@@ -14,11 +15,6 @@ namespace FileSynchronization
 
     public class SyncConfig
     {
-        private string _appConfigLocation;
-        private string _mappingCsvFileName;
-        private string _logFolder;
-        private string _errorLogFile;
-
         public Dictionary<string, string> FolderMappings;
 
         public SyncConfig()
@@ -26,26 +22,28 @@ namespace FileSynchronization
             FolderMappings = new Dictionary<string, string>();
 
             AppSettingsReader configReader = new AppSettingsReader();
-            _mappingCsvFileName = (string)configReader.GetValue("FileID_mappings_" + Environment.MachineName, typeof(string));
-            _appConfigLocation = (string)configReader.GetValue("ConfigFile_" + Environment.MachineName, typeof(string));
-            _logFolder = (string)configReader.GetValue("LogFolder_" + Environment.MachineName, typeof(string));
+            AppConfigLocation = (string)configReader.GetValue("ConfigFile_" + Environment.MachineName, typeof(string));
 
-            _errorLogFile = String.Copy(_logFolder) + @"\" + DateTime.Now.Year + "-" + DateTime.Now.Month 
-                + "-" + DateTime.Now.Day + "_" + DateTime.Now.Hour + ":" + DateTime.Now.Minute + ".log";
+            LogFolder = GetConfigValueByName("LogFolder");
+            MappingCsvFileName = GetConfigValueByName("FileMappingFile");
+
+            var dateSuffix = DateTime.Now.Year + "-" + DateTime.Now.Month
+                             + "-" + DateTime.Now.Day + "_" + DateTime.Now.Hour + "_" + DateTime.Now.Minute + ".log";
+            ErrorLogFile = String.Copy(LogFolder) + @"\error_" + dateSuffix;
+            ActionsPreviewLogFile = String.Copy(LogFolder) + @"\actions_preview_" + dateSuffix;
         }
 
-        public string AppConfigLocation => _appConfigLocation;
-        public string MappingCsvFileName => _mappingCsvFileName;
-        public string LogFolder => _logFolder;
-        public string ErrorLogFile => _errorLogFile;
+        public string AppConfigLocation { get; }
+        public string MappingCsvFileName { get; }
+        public string LogFolder { get; }
+        public string ErrorLogFile { get; }
+        public string ActionsPreviewLogFile { get; set; }
 
         public void InitializeFolderMappings()
         {
-            XElement root = XElement.Load(_appConfigLocation);
+            XElement root = XElement.Load(AppConfigLocation);
+            var mappingCollection = root.Element("mappings").Elements("mapping");
 
-
-            IEnumerable<XElement> mappingCollection = from m in root.Element("mappings").Elements("mapping")
-                select m;
 
             foreach (XElement el in mappingCollection)
             {
@@ -55,6 +53,21 @@ namespace FileSynchronization
                 string destFolderResolved = DriveHelper.ResolvePath(this,destFolder);
                 FolderMappings.Add(sourceFolderResolved, destFolderResolved);
             }
+        }
+
+
+
+        public string GetConfigValueByName(string name)
+        {
+            XElement root = XElement.Load(AppConfigLocation);
+            var el = root.Element(name);
+
+
+            if(el.HasElements)
+               throw new XmlException("The node with name " + name 
+                   + " contains other elements instead of string value");
+
+            return el.Value;
         }
     }
  

@@ -37,7 +37,7 @@ namespace FileSynchronization
             }
 
             Console.WriteLine("\n");
-            Console.WriteLine("Starting populating source and destination files lists...");
+            Console.WriteLine("Populating source and destination files lists...");
 
             Task[] populatingFilesTask = new Task[2];
             populatingFilesTask[0] = Task.Factory.StartNew(() =>
@@ -165,14 +165,14 @@ namespace FileSynchronization
                 var watchAddMissingFilesToMapping = new Stopwatch();
                 watchAddMissingFilesToMapping.Start();
 
-                var sourceFiles = syncExec.SourceFiles;
-                var destFiles = syncExec.DestFiles;
-                int expectedFileMappingEntriesCount = (new int[] {sourceFiles.Count, destFiles.Count}).Max();
-                int completionPercentage;
+                var sourceFilesMissingInMapping = syncExec.FilesMissingInMapping.Where(x => x.fileType == FileType.Source);
+                var destFilesMissingInMapping = syncExec.FilesMissingInMapping.Where(x => x.fileType == FileType.Destination);
+                int expectedFileMappingEntriesCount = (new int[] { sourceFilesMissingInMapping.Count(),
+                    destFilesMissingInMapping.Count()}).Max();
                 var fileMappingFromPaths = syncExec.FileMappingFromPaths;
 
-                var sourceFilesWithoutCounterpart = new List<FileExtended>(sourceFiles);
-                var destFilesWithoutCounterpart = new List<FileExtended>(destFiles);
+                var sourceFilesWithoutCounterpart = new List<FileExtended>(sourceFilesMissingInMapping);
+                var destFilesWithoutCounterpart = new List<FileExtended>(destFilesMissingInMapping);
 
                 Console.WriteLine();
                 Console.WriteLine("\tStarting populating missing FileMapping from paths:");
@@ -182,8 +182,8 @@ namespace FileSynchronization
                 }
 
                 // append file mapping from paths with all intersecting source and destination files combinations
-                var intersectionMapping = from s in sourceFiles
-                    join d in destFiles
+                var intersectionMapping = from s in sourceFilesMissingInMapping
+                                          join d in destFilesMissingInMapping
                         on s.RelativePath equals d.RelativePath
                     select new {file1 = s, file2 = d};
                 
@@ -225,27 +225,24 @@ namespace FileSynchronization
         public static void InitFileMapping(SyncExecution syncExec)
         {
             var watchFileMapping = new Stopwatch();
-            Console.WriteLine("\nStarting preparing file mapping...");
+            Console.WriteLine("\nPreparing file mapping...");
             watchFileMapping.Start();
 
             CSVHelper.InitFileMappingFromCsv(syncExec);
 
-            bool csvExists = File.Exists(syncExec.FileMappingCsvLocation);
-            DateTime csvLastWrite = DateTime.MinValue;
-            DateTime appConfLastWrite = DateTime.MinValue;
-            if (csvExists)
-            {
-                csvLastWrite = (new FileInfo(syncExec.FileMappingCsvLocation)).LastWriteTime;
-                appConfLastWrite = (new FileInfo(syncExec.SyncConfig.AppConfigLocation)).LastWriteTime;
-            }
+            //bool csvExists = File.Exists(syncExec.FileMappingCsvLocation);
+            //DateTime csvLastWrite = DateTime.MinValue;
+            //DateTime appConfLastWrite = DateTime.MinValue;
+            //if (csvExists)
+            //{
+            //    csvLastWrite = (new FileInfo(syncExec.FileMappingCsvLocation)).LastWriteTime;
+            //    appConfLastWrite = (new FileInfo(syncExec.SyncConfig.AppConfigLocation)).LastWriteTime;
+            //}
             
             // append existing file mapping if app_config has been modified later than csv mapping file
             // or if csv file does not exist
-            if(appConfLastWrite > csvLastWrite ||
-                !csvExists
-                ||
-               syncExec.FileMappingMissingFiles()
-              )
+            if ( syncExec.FilesMissingInMapping.Count > 0)
+              
             { 
                 AddMissingFileMappingFromPaths(syncExec);
             }
