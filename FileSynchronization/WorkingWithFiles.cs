@@ -1,35 +1,41 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace FileSynchronization
 {
     public static class WorkingWithFiles
     {
-        /*
-        public static string Create(string fileToCopyFullPath, string targetPath)
+        public static void GetFiles(string directory, List<string> filesList)
         {
-            string newFileId = "";
-
             try
             {
-                // To copy a folder's contents to a new location:
-                // Create a new target folder, if necessary.
-                if (!System.IO.Directory.Exists(targetPath))
+                if (directory.ToString().Contains("\\$RECYCLE.BIN\\"))
+                    return;
+
+                var subFolders = Directory.GetDirectories(directory);
+                foreach (var subFolder in subFolders)
                 {
-                    System.IO.Directory.CreateDirectory(targetPath);
+                    GetFiles(subFolder, filesList);
                 }
 
-            
-                File.Copy(fileToCopy, targetPath, false);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
 
-            return newFileId;
+                try
+                {
+                    var files = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+                    filesList.AddRange(files);
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    //Console.WriteLine("Access to directory " + directory 
+                    //    + " is denied, skipping it...");
+                }
+            }
+            catch (Exception e)
+            {
+                // ignored
+            }
         }
-        */
     }
 }

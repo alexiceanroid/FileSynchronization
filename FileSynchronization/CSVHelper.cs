@@ -74,12 +74,32 @@ namespace FileSynchronization
                             else
                             {
                                 if(secondFileExtended != null)
-                                    fileMapping.Add(secondFileExtended, firstFileExtended);
+                                    fileMapping.Add(secondFileExtended, null);
                             }
 
-                            // the following method allows to determine file renaming, deletion, moving
-                            syncExec.AppendActionListWithDeleteRenameMove(firstFileExtended, secondFileExtended, row);
+                            if (firstFileExtended != null
+                                ||
+                                secondFileExtended != null)
+                            {
+                                // the following method allows to determine file renaming, deletion, moving
+                                syncExec.AppendActionListWithDeleteRenameMove(firstFileExtended, secondFileExtended,
+                                    row);
 
+                            }
+                            // if this mapping needs to be persisted:
+                            else if (
+                                !(syncExec.SyncConfig.FolderMappings.ContainsKey(firstBasePath)
+                                  ||
+                                  syncExec.SyncConfig.FolderMappings.ContainsValue(firstBasePath)
+                                  ||
+                                  syncExec.SyncConfig.FolderMappings.ContainsKey(secondBasePath)
+                                  ||
+                                  syncExec.SyncConfig.FolderMappings.ContainsValue(secondBasePath)
+                                    )
+                                )
+                            {
+                                syncExec.CsvMappingToPersist.Add(row);
+                            }
                             linesRead++;
                             completionPercentage = (int) Math.Round(100 * (double)linesRead 
                                 / expectedFileMappingCount);
@@ -122,9 +142,16 @@ namespace FileSynchronization
             // Write data to CSV file
 
             var fileMapping = syncExec.FileMapping;
+            var csvMappingToPersist = syncExec.CsvMappingToPersist;
             string fileMappingCsvLocation = syncExec.SyncConfig.MappingCsvFileName;
+
             using (var writer = new CsvFileWriter(fileMappingCsvLocation))
             {
+                foreach (var csvRow in csvMappingToPersist)
+                {
+                    writer.WriteRow(csvRow);
+                }
+
                 foreach (var filePair in fileMapping)
                 {
                     var file1 = filePair.Key;

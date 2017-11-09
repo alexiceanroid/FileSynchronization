@@ -48,9 +48,16 @@ namespace FileSynchronization
             foreach (XElement el in mappingCollection)
             {
                 string sourceFolder = el.Element("SourceFolder").Value;
-                string sourceFolderResolved = DriveHelper.ResolvePath(this,sourceFolder);
                 string destFolder = el.Element("DestinationFolder").Value;
+
+                string sourceFolderResolved = DriveHelper.ResolvePath(this,sourceFolder);
                 string destFolderResolved = DriveHelper.ResolvePath(this,destFolder);
+
+                if (!Directory.Exists(sourceFolderResolved) || !Directory.Exists(destFolderResolved))
+                    throw new DirectoryNotFoundException("Check source and destination folders: \n"
+                                                         + sourceFolder + "\n"
+                                                         + destFolder);
+
                 FolderMappings.Add(sourceFolderResolved, destFolderResolved);
             }
         }

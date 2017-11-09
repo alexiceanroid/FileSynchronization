@@ -27,6 +27,12 @@ namespace FileSynchronization
 
         public List<FileExtended> SourceFiles { get; set; }
         public List<FileExtended> DestFiles { get; set; }
+
+        // this is mapping from existing csv file for folder mapping
+        //  that is no longer found in config file. This, however, can be needed
+        //  in future, in case the folder mapping gets re-enabled in the config:
+        public List<CsvRow> CsvMappingToPersist { get; set; } 
+
         public Dictionary<FileExtended, FileExtended> FileMappingFromCsv { get; set; }
         public Dictionary<FileExtended, FileExtended> FileMappingFromPaths { get; set; }
 
@@ -39,6 +45,7 @@ namespace FileSynchronization
             FileMappingFromCsv = new Dictionary<FileExtended, FileExtended>();
             FileMappingFromPaths = new Dictionary<FileExtended, FileExtended>();
             failedActions = new List<FilePairAction>();
+            CsvMappingToPersist = new List<CsvRow>();
         }
 
         public bool AnyChangesNeeded

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,19 +16,27 @@ namespace ConsoleInterface
         {
             
             Console.WriteLine("Starting the FileSync app... \n"
-                + "If you want to stop its execution at any time, please, press CTRL+C");
+                              + "If you want to stop its execution at any time, please, press CTRL+C");
 
             Console.CancelKeyPress += (sender, e) =>
             {
 
                 Console.WriteLine("\n\n\n\n\nExiting...");
-                if(Console.ReadKey() != null)
+                if (Console.ReadKey() != null)
                     Environment.Exit(0);
             };
 
             // read and initialize source and destination folders:
             var confInstance = new SyncConfig();
-            confInstance.InitializeFolderMappings();
+            try
+            {
+
+                confInstance.InitializeFolderMappings();
+            }
+            catch (Exception ex)
+            {
+                ExitApp("Could not initialize folder mappings. \n" + ex.Message);
+            }
 
             var syncExec = new SyncExecution(confInstance);
             syncExec = PrepareSyncExec(syncExec);
@@ -36,10 +45,7 @@ namespace ConsoleInterface
 
             if (!syncExec.AnyChangesNeeded)
             {
-                Console.WriteLine("\nNo changes detected");
-                Console.WriteLine("\nPress any key to exit");
-                if (Console.ReadKey() != null)
-                    Environment.Exit(0);
+                ExitApp("No changes detected");
             }
 
             SyncHelper.WriteActionsListToLog(syncExec);
@@ -73,11 +79,13 @@ namespace ConsoleInterface
                 if(proceedWithSync == "yes")
                     Console.WriteLine("Execution completed sucessfully.");
             }
-            Console.WriteLine("\nPress any key to exit");
-            if(Console.ReadKey() != null)
-                Environment.Exit(0);
+
 
             
+            
+
+            
+            ExitApp("");
         }
 
 
@@ -94,6 +102,19 @@ namespace ConsoleInterface
             return syncExec;
         }
 
-        
+        static void ExitApp(string reason)
+        {
+            Console.WriteLine("\n" + reason);
+            Console.WriteLine("\nPress any key to exit");
+            if (Console.ReadKey() != null)
+                Environment.Exit(0);
+        }
+
+        static void FolderCleanup()
+        {
+            string folder = @"A:\$RECYCLE.BIN";
+            Directory.SetAccessControl(folder, new DirectorySecurity("test", AccessControlSections.Owner));
+            Directory.Delete(folder, true);
+        }
     }
 }

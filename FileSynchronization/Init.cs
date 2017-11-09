@@ -28,16 +28,21 @@ namespace FileSynchronization
             var watchSourceFiles = new Stopwatch();
             var watchDestFiles = new Stopwatch();
 
+            var sourceFilesTemp = new List<string>();
+            var destFilesTemp = new List<string>();
+
             watchInitFiles.Start();
-            // count all files from source and destination:
-            foreach (var pair in folderMappings)
-            {
-                _totalSourceFilesCount += Directory.GetFiles(pair.Key, "*.*", SearchOption.AllDirectories).Length;
-                _totalDestFilesCount += Directory.GetFiles(pair.Value, "*.*", SearchOption.AllDirectories).Length;
-            }
 
             Console.WriteLine("\n");
             Console.WriteLine("Populating source and destination files lists...");
+            foreach (var pair in folderMappings)
+            {
+                WorkingWithFiles.GetFiles(pair.Key, sourceFilesTemp);
+                WorkingWithFiles.GetFiles(pair.Value, destFilesTemp);
+            }
+
+            _totalSourceFilesCount = sourceFilesTemp.Count;
+            _totalDestFilesCount = destFilesTemp.Count;
 
             Task[] populatingFilesTask = new Task[2];
             populatingFilesTask[0] = Task.Factory.StartNew(() =>
@@ -46,7 +51,7 @@ namespace FileSynchronization
                 syncExec.SourceFiles.Capacity = _totalSourceFilesCount;
                 foreach (var pair in folderMappings)
                 {
-                    PopulateSourceFiles(syncExec, pair.Key);
+                    PopulateSourceFiles(syncExec, pair.Key, sourceFilesTemp);
                 }
                 watchSourceFiles.Stop();
             }
@@ -58,7 +63,7 @@ namespace FileSynchronization
                     syncExec.DestFiles.Capacity = _totalDestFilesCount;
                     foreach (var pair in folderMappings)
                     {
-                        PopulateDestFiles(syncExec, pair.Value);
+                        PopulateDestFiles(syncExec, pair.Value, destFilesTemp);
                     }
                     watchDestFiles.Stop();
                 }
@@ -83,23 +88,23 @@ namespace FileSynchronization
             return timeString;
         }
 
-        private static void PopulateDestFiles(SyncExecution syncExec, string destinationFolder)
+        private static void PopulateDestFiles(SyncExecution syncExec, string destinationFolder, List<string> filesList)
         {
             
-            PopulateFileLists(destinationFolder, syncExec.DestFiles,FileType.Destination);
+            PopulateFileLists(destinationFolder, syncExec.DestFiles,FileType.Destination, filesList);
         }
 
-        private static void PopulateSourceFiles(SyncExecution syncExec, string sourceFolder)
+        private static void PopulateSourceFiles(SyncExecution syncExec, string sourceFolder, List<string> filesList)
         {
-            PopulateFileLists(sourceFolder, syncExec.SourceFiles,FileType.Source);
+            PopulateFileLists(sourceFolder, syncExec.SourceFiles,FileType.Source, filesList);
         }
 
-        private static void PopulateFileLists(string path, List<FileExtended> fileInfos, FileType fileType)
+        private static void PopulateFileLists(string path, List<FileExtended> fileInfos, FileType fileType, List<string> filesList)
         {
             string basePath = String.Copy(path);
-            var fileList = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories);
+            //var fileList = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories);
 
-            foreach (var file in fileList)
+            foreach (var file in filesList)
             {
                 var filePath = String.Copy(file);
                 var fileInfo = new FileInfo(filePath);
@@ -119,39 +124,7 @@ namespace FileSynchronization
 
         
 
-        //public static SyncConfig InitializeFolderMappings()
-        //{
-        //    SyncConfig confInstance = new SyncConfig();
-        //    try
-        //    {
-        //        var configReader = new AppSettingsReader();
-        //        string configLocation = (string)configReader.GetValue("ConfigFile_"+Environment.MachineName, typeof(string));
-        //        confInstance.AppConfigLocation = configLocation;
-
-
-        //        XElement root = XElement.Load(configLocation);
-
-
-        //        IEnumerable<XElement> mappingCollection = from m in root.Element("mappings").Elements("mapping")
-        //                                                  select m;
-
-        //        foreach (XElement el in mappingCollection)
-        //        {
-        //            string sourceFolder = el.Element("SourceFolder").Value;
-        //            string sourceFolderResolved = DriveHelper.ResolvePath(sourceFolder);
-        //            string destFolder = el.Element("DestinationFolder").Value;
-        //            string destFolderResolved = DriveHelper.ResolvePath(destFolder);
-        //            confInstance.FolderMappings.Add(sourceFolderResolved, destFolderResolved);
-        //        }
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        throw e;
-        //    }
-
-        //    return confInstance;
-
-        //}
+        
 
         
 
@@ -189,11 +162,14 @@ namespace FileSynchronization
                 
                 foreach (var filePair in intersectionMapping)
                 {
-                    fileMappingFromPaths.Add(filePair.file1,filePair.file2);
-                    sourceFilesWithoutCounterpart.Remove(filePair.file1);
-                    destFilesWithoutCounterpart.Remove(filePair.file2);
+                    if (!fileMappingFromPaths.ContainsKey(filePair.file1))
+                    {
+                        fileMappingFromPaths.Add(filePair.file1, filePair.file2);
+                        sourceFilesWithoutCounterpart.Remove(filePair.file1);
+                        destFilesWithoutCounterpart.Remove(filePair.file2);
 
-                    FileMappingCompletionInfo(expectedFileMappingEntriesCount);
+                        FileMappingCompletionInfo(expectedFileMappingEntriesCount);
+                    }
                 }
 
                 // append the mapping with source files for which no destination match has been found
