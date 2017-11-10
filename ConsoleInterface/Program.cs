@@ -30,8 +30,9 @@ namespace ConsoleInterface
             var confInstance = new SyncConfig();
             try
             {
-
+                Console.WriteLine("Initializing folder mappings...");
                 confInstance.InitializeFolderMappings();
+                Console.WriteLine("Done");
             }
             catch (Exception ex)
             {
@@ -39,9 +40,15 @@ namespace ConsoleInterface
             }
 
             var syncExec = new SyncExecution(confInstance);
-            syncExec = PrepareSyncExec(syncExec);
+            // initialize source and destination files:
+            
+            Init.InitializeFiles(syncExec);
 
-            syncExec.AppendActionList();
+            // retrieve existing file mapping from CSV
+            // and, if necessary, create additional mapping from paths
+            Init.InitFileMapping(syncExec);
+
+            syncExec.AppendActionListWithUpdateCreateMove();
 
             if (!syncExec.AnyChangesNeeded)
             {
@@ -89,18 +96,6 @@ namespace ConsoleInterface
         }
 
 
-
-        static SyncExecution PrepareSyncExec(SyncExecution syncExec)
-        {
-            // initialize source and destination files:
-            Init.InitializeFiles(syncExec);
-
-            // retrieve existing file mapping from CSV
-            // and, if necessary, create additional mapping from paths
-            Init.InitFileMapping(syncExec);
-
-            return syncExec;
-        }
 
         static void ExitApp(string reason)
         {

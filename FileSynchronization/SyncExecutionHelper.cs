@@ -11,36 +11,43 @@ namespace FileSynchronization
     public partial class SyncExecution
     {
 
-        private bool CreateMarkForPaths(FilePairAction filePairAction)
+        private bool AddCreateAction(KeyValuePair<FileExtended,FileExtended> filePair)
         {
-            bool res = false;
-            // Action = Create
-            if (filePairAction.File2 == null)
+            bool create = false;
+
+            if (filePair.Value == null)
             {
-                res = true;
+                create = true;
+                FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value);
                 filePairAction.ActionType = ActionType.Create;
                 filePairAction.ActionDirection = filePairAction.File1.fileType == FileType.Source ? 
                     Direction.SourceToDestination : Direction.DestinationToSource;
+
+                AddFilePairWithCheck(filePairAction);
+                
             }
-            return res;
+
+            return create;
         }
 
         
 
 
-        private bool UpdateMark(FilePairAction filePairAction)
+        private void AddUpdateAction(KeyValuePair<FileExtended,FileExtended> filePair)
         {
-            bool res = false;
-            var file1 = filePairAction.File1;
-            var file2 = filePairAction.File2;
+
+            var file1 = filePair.Key;
+            var file2 = filePair.Value;
             // Action = Update
             DateTime file1LastUpdatedOn = DateTime.Parse(file1.lastWriteDateTime, CultureInfo.InvariantCulture);
             DateTime file2LastUpdatedOn = DateTime.Parse(file2.lastWriteDateTime, CultureInfo.InvariantCulture);
             if (file1LastUpdatedOn.Date != file2LastUpdatedOn.Date
                 || file1LastUpdatedOn.TimeOfDay != file2LastUpdatedOn.TimeOfDay)
             {
-                res = true;
-                filePairAction.ActionType = ActionType.Update;
+                FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value)
+                {
+                    ActionType = ActionType.Update
+                };
                 if (file1LastUpdatedOn > file2LastUpdatedOn)
                 {
                     filePairAction.ActionDirection = file1.fileType == FileType.Source ? Direction.SourceToDestination : Direction.DestinationToSource;
@@ -50,37 +57,38 @@ namespace FileSynchronization
                     filePairAction.ActionDirection = file1.fileType == FileType.Source ? Direction.DestinationToSource : Direction.SourceToDestination;
                 }
                 
+                AddFilePairWithCheck(filePairAction);
             }
-            return res;
-        }
-        
 
-        
+        }
+
+
+
 
         private void AddFilePairWithCheck(FilePairAction filePairAction)
         {
-            bool filePairAddedAlready = false;
+            //bool filePairAddedAlready = false;
 
-            foreach (var entry in actionList)
-            {
-                if(filePairAction.File1 == entry.File1
-                    &&
-                    filePairAction.File2 == entry.File2)
-                {
-                    filePairAddedAlready = true;
-                    break;
-                }
+            //foreach (var entry in actionList)
+            //{
+            //    if (filePairAction.File1 == entry.File1
+            //        &&
+            //        filePairAction.File2 == entry.File2)
+            //    {
+            //        filePairAddedAlready = true;
+            //        break;
+            //    }
 
-            }
+            //}
 
-            if (filePairAddedAlready)
-            {
-                string mes = "The actions list already contains this file combination:\n" +
-                             "\t source file:      " + filePairAction.File1.fullPath + "\n" +
-                             "\t destination file: " + filePairAction.File2.fullPath;
+            //if (filePairAddedAlready)
+            //{
+            //    string mes = "The actions list already contains this file combination:\n" +
+            //                 "\t source file:      " + filePairAction.File1.fullPath + "\n" +
+            //                 "\t destination file: " + filePairAction.File2.fullPath;
 
-                throw new Exception(mes);
-            }
+            //    throw new Exception(mes);
+            //}
             actionList.Add(filePairAction);
         }
 
@@ -129,7 +137,7 @@ namespace FileSynchronization
                filePairAction.ActionType == ActionType.Move
                 ||
                filePairAction.ActionType == ActionType.Delete)
-            { actionList.Add(filePairAction);}
+            { AddFilePairWithCheck(filePairAction);}
         }
 
         private void IdentifyRenameMove(FileExtended sourceFile, FileExtended oldSourceFile,
@@ -275,22 +283,26 @@ namespace FileSynchronization
             return filesDict;
         }
 
-        internal bool ActionListContainsFilePair(KeyValuePair<FileExtended,FileExtended> filePair)
-        {
-            bool res = false;
-            foreach (var action in actionList)
-            {
-                if ((action.File1 == filePair.Key && action.File2 == filePair.Value)
-                    ||
-                    (action.File1 == filePair.Value && action.File2 == filePair.Key))
-                {
-                    res = true;
-                    break;
-                }
-            }
+        //internal bool ActionListContainsFilePairAction(KeyValuePair<FileExtended,FileExtended> filePair)
+        //{
+        //    bool res = false;
+        //    foreach (var action in actionList)
+        //    {
+        //        if (
+        //            action.ActionType == filePair.
+        //                ((action.File1 == filePair.Key && action.File2 == filePair.Value)
+        //                ||
+        //                (action.File1 == filePair.Value && action.File2 == filePair.Key)
+        //                )
+        //            )
+        //        {
+        //            res = true;
+        //            break;
+        //        }
+        //    }
 
-            return res;
-        }
+        //    return res;
+        //}
 
         internal void UpdateFileInMapping(FileExtended oldFile, FileExtended newFile)
         {
@@ -318,14 +330,46 @@ namespace FileSynchronization
                 + filesMoved + filesRenamed + filesUpdated;
             if (filesProcessed > 1)
             {
-                Console.SetCursorPosition(0, Console.CursorTop - 5);
+                Console.SetCursorPosition(0, Console.CursorTop - 6);
             }
             Console.Write("\rfiles created:           " + filesCreated + "\n"
                           + "files updated:           " + filesUpdated + "\n"
                           + "files renamed and moved: " + filesRenamedMoved + "\n"
                           + "files renamed:           " + filesRenamed + "\n"
                           + "files moved:             " + filesMoved + "\n"
-                          + "files deleted:           " + filesDeleted);
+                          + "files deleted:           " + filesDeleted + "\n\n"
+                          + "completion percentage:   " + Math.Round(100*(double)filesProcessed/ActionsList.Count));
+            
+        }
+
+        private void AddMoveAction(KeyValuePair<FileExtended,FileExtended> filePair)
+        {
+            var file1 = filePair.Key;
+            var file2 = filePair.Value;
+
+            if (file1.RelativePath != file2.RelativePath)
+            {
+                FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value);
+                filePairAction.ActionType = ActionType.Move;
+
+                DateTime lastWriteDate1 = DateTime.Parse(file1.lastWriteDateTime, CultureInfo.InvariantCulture);
+                DateTime lastWriteDate2 = DateTime.Parse(file2.lastWriteDateTime, CultureInfo.InvariantCulture);
+
+                if (lastWriteDate1.Date == lastWriteDate2.Date
+                    &&
+                    lastWriteDate1.TimeOfDay == lastWriteDate2.TimeOfDay)
+                {
+                    filePairAction.ActionDirection = Direction.SourceToDestination;
+                }
+                else
+                {
+                    filePairAction.ActionDirection = lastWriteDate1 < lastWriteDate2
+                        ? Direction.DestinationToSource
+                        : Direction.SourceToDestination;
+                }
+
+                AddFilePairWithCheck(filePairAction);
+            }
         }
     }
 }

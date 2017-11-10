@@ -28,7 +28,7 @@ namespace FileSynchronization
                 var watchFileMappingFromCsv = new Stopwatch();
                 watchFileMappingFromCsv.Start();
                 var fileMapping = syncExec.FileMappingFromCsv;
-                Console.WriteLine("\tpopulating filemapping from csv:");
+                Console.WriteLine("populating filemapping from csv:");
                 // Read data from CSV file
                 try
                 {
@@ -107,20 +107,20 @@ namespace FileSynchronization
                                 + completionPercentage + "%");
                         }
                     }
-                    Console.WriteLine("\n\tcompleted populating filemapping from csv");
+                    Console.WriteLine("\ncompleted populating filemapping from csv");
                 }
                 catch (Exception ex)
                 {
                     linesRead = 0;
                     fileMapping.Clear();
-                    Console.WriteLine("\tcould not read the csv file: " + ex.Message);
-                    Console.WriteLine("\tclearing file mapping, proceeding with populating from paths...");
+                    Console.WriteLine("could not read the csv file: " + ex.Message);
+                    Console.WriteLine("clearing file mapping, proceeding with populating from paths...");
                 }
                 finally
                 {
                     watchFileMappingFromCsv.Stop();
-                    Console.WriteLine("\tfile mapping lines read from csv: " + linesRead);
-                    Console.WriteLine("\telapsed time: " +
+                    Console.WriteLine("file mapping lines read from csv: " + linesRead);
+                    Console.WriteLine("elapsed time: " +
                                       Init.FormatTime(watchFileMappingFromCsv.ElapsedMilliseconds));
                 }
             }

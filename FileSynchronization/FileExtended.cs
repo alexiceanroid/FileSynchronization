@@ -63,10 +63,11 @@ namespace FileSynchronization
                     return null;
                 }
             }
-
-
         }
 
+        public string FileName => Path.GetFileName(fullPath);
+        public long FileSize => (new FileInfo(fullPath)).Length;
+        public string FileNameAndSize => FileName + FileSize.ToString();
 
         public bool Equals(FileExtended x, FileExtended y)
         {
@@ -74,6 +75,22 @@ namespace FileSynchronization
         }
 
         public int GetHashCode(FileExtended obj)
+        {
+            return fileID.GetHashCode();
+        }
+
+
+        public override bool Equals(object obj)
+        {
+            bool res = false;
+            if (obj is FileExtended f)
+            {
+                res = this.GetHashCode() == f.GetHashCode();
+            }
+            return res;
+        }
+
+        public override int GetHashCode()
         {
             return fileID.GetHashCode();
         }

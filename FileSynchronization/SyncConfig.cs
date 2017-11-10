@@ -22,7 +22,8 @@ namespace FileSynchronization
             FolderMappings = new Dictionary<string, string>();
 
             AppSettingsReader configReader = new AppSettingsReader();
-            AppConfigLocation = (string)configReader.GetValue("ConfigFile_" + Environment.MachineName, typeof(string));
+            AppConfigLocation = (string)configReader.GetValue("ConfigFile_" + Environment.MachineName, 
+                typeof(string));
 
             LogFolder = GetConfigValueByName("LogFolder");
             MappingCsvFileName = GetConfigValueByName("FileMappingFile");

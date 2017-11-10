@@ -185,60 +185,39 @@ namespace FileSynchronization
             {
                 resultingFile = fileFromId;
             }
-
             return resultingFile;
         }
         
 
 
-        public void AppendActionList()
+        public void AppendActionListWithUpdateCreateMove()
         {
             Console.WriteLine("\n");
             Console.WriteLine("Calculating necessary actions to perform...");
+            int count = 0;
             foreach (var filePair in FileMappingFromPaths)
             {
-                if (ActionListContainsFilePair(filePair))
-                    continue;
-
-                FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value);
-                
-                
-                bool create = CreateMarkForPaths(filePairAction);
+                count++;
+                bool create = AddCreateAction(filePair);
                 if (create)
                 {
-                    AddFilePairWithCheck(filePairAction);
-                    continue;
-                }
-                
-                
-                bool update = UpdateMark(filePairAction);
-                if (update)
-                {
-                    AddFilePairWithCheck(filePairAction);
                     continue;
                 }
 
-                AddFilePairWithCheck(filePairAction);
+                AddMoveAction(filePair);
+                AddUpdateAction(filePair);
+
+                //Init.DisplayCompletionInfo("entries processed from file mapping", count,FileMapping.Count);
             }
 
             foreach (var filePair in FileMappingFromCsv)
             {
-                if (ActionListContainsFilePair(filePair))
-                    continue;
-
-                FilePairAction filePairAction = new FilePairAction(filePair.Key, filePair.Value);
-
-
-                bool update = UpdateMark(filePairAction);
-                if (update)
-                {
-                    AddFilePairWithCheck(filePairAction);
-                    continue;
-                }
-
-
-                AddFilePairWithCheck(filePairAction);
+                count++;
+                AddUpdateAction(filePair);
+                //Init.DisplayCompletionInfo("entries processed from file mapping", count, FileMapping.Count);
             }
+            actionList.Sort();
+            Console.WriteLine("Actions list has been populated.");
         }
 
 
@@ -254,6 +233,7 @@ namespace FileSynchronization
 
             var syncWatch = new Stopwatch();
             syncWatch.Start();
+            
 
             Console.WriteLine("Starting synchronization....");
             foreach (var action in actionsToPerform)
@@ -262,6 +242,7 @@ namespace FileSynchronization
                 FileExtended sourceFile = filesDict[FileType.Source];
                 FileExtended destFile = filesDict[FileType.Destination];
 
+                
                 try
                 {
                     switch (action.ActionType)
