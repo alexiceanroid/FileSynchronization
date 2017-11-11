@@ -23,7 +23,7 @@ namespace FileSynchronization
 
                 try
                 {
-                    var files = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+                    var files = Directory.GetFiles(directory, "*.*", SearchOption.TopDirectoryOnly);
                     filesList.AddRange(files);
                 }
                 catch (UnauthorizedAccessException e)

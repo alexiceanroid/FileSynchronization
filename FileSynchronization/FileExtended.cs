@@ -14,7 +14,7 @@ namespace FileSynchronization
 
 
 
-    public class FileExtended : IEqualityComparer<FileExtended>
+    public class FileExtended : IEqualityComparer<FileExtended>, IComparable<FileExtended>
     {
         public readonly FileType fileType;
         public readonly string basePath;
@@ -58,10 +58,7 @@ namespace FileSynchronization
                 {
                     return fullPath.Replace(basePath, "");
                 }
-                else
-                {
-                    return null;
-                }
+                return null;
             }
         }
 
@@ -93,6 +90,22 @@ namespace FileSynchronization
         public override int GetHashCode()
         {
             return fileID.GetHashCode();
+        }
+
+        public int CompareTo(FileExtended otherFile)
+        {
+            return String.Compare(fullPath, otherFile.fullPath, StringComparison.Ordinal);
+        }
+
+        public override string ToString()
+        {
+            return "File type:       " + fileType + "\n"
+                   + "Base path:       " + basePath + "\n"
+                   + "Last write date: " + lastWriteDateTime + "\n"
+                   + "File Id:         " + fileID + "\n"
+                   + "Full path:       " + fullPath + "\n"
+                   + "File name:       " + FileName + "\n"
+                   + "File size:       " + FileSize;
         }
     }
     

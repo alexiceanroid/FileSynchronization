@@ -47,20 +47,20 @@ namespace FileSynchronization
             }
         }
 
-        public static UInt64 GetFileIndex(string path)
-        {
-            BY_HANDLE_FILE_INFORMATION info;
-            GetFileInformation(path, out info);
-            return info.FileIndexLow | ((UInt64)info.FileIndexHigh << 32);
-        }
+        //public static UInt64 GetFileIndex(string path)
+        //{
+        //    BY_HANDLE_FILE_INFORMATION info;
+        //    GetFileInformation(path, out info);
+        //    return info.FileIndexLow | ((UInt64)info.FileIndexHigh << 32);
+        //}
 
-        public static Tuple<uint, ulong> GetFileIdentifier(string path)
-        {
-            BY_HANDLE_FILE_INFORMATION info;
-            GetFileInformation(path, out info);
-            return new Tuple<uint, ulong>(info.VolumeSerialNumber,
-                info.FileIndexLow | ((UInt64)info.FileIndexHigh << 32));
-        }
+        //public static Tuple<uint, ulong> GetFileIdentifier(string path)
+        //{
+        //    BY_HANDLE_FILE_INFORMATION info;
+        //    GetFileInformation(path, out info);
+        //    return new Tuple<uint, ulong>(info.VolumeSerialNumber,
+        //        info.FileIndexLow | ((UInt64)info.FileIndexHigh << 32));
+        //}
 
         public static string GetCustomFileId(string path)
         {
@@ -69,7 +69,8 @@ namespace FileSynchronization
             // value if returned back to original volume!!
             BY_HANDLE_FILE_INFORMATION info;
             GetFileInformation(path, out info);
-            return   info.VolumeSerialNumber.ToString() + "-" + info.FileIndexLow.ToString() + "-"
+            string driveLetter = Path.GetPathRoot(path);
+            return driveLetter  + info.FileIndexLow.ToString() + "-"
                 + info.FileIndexHigh.ToString();
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
 
@@ -18,7 +19,7 @@ namespace FileSynchronization
         //    <secondFileType>,<secondBasePath>,<secondFullPath>,<secondFileId>
         public static void InitFileMappingFromCsv(SyncExecution syncExec)
         {
-            string fileMappingCsvLocation = syncExec.SyncConfig.MappingCsvFileName;
+            string fileMappingCsvLocation = syncExec.SyncConfig.Parameters["FileMappingFile"];
             int expectedFileMappingCount = Math.Max(syncExec.SourceFiles.Count, syncExec.DestFiles.Count);
             int completionPercentage = 0;
             var linesRead = 0;
@@ -69,12 +70,16 @@ namespace FileSynchronization
 
                             if (firstFileExtended != null)
                             {
+                                if (fileMapping.ContainsKey(firstFileExtended))
+                                    continue;
                                 fileMapping.Add(firstFileExtended, secondFileExtended);
                             }
                             else
                             {
-                                if(secondFileExtended != null)
+                                if (secondFileExtended != null && !fileMapping.ContainsKey(secondFileExtended))
+                                {
                                     fileMapping.Add(secondFileExtended, null);
+                                }
                             }
 
                             if (firstFileExtended != null
@@ -101,9 +106,11 @@ namespace FileSynchronization
                                 syncExec.CsvMappingToPersist.Add(row);
                             }
                             linesRead++;
+                            int destFilesUnmappedCount =
+                                syncExec.FilesMissingInMapping.Count(s => s.fileType == FileType.Destination);
                             completionPercentage = (int) Math.Round(100 * (double)linesRead 
-                                / expectedFileMappingCount);
-                            Console.Write("\r\tlines read: " + linesRead + "; completion percentage: "
+                                / (linesRead + destFilesUnmappedCount));
+                            Console.Write("\r\tlines read: " + linesRead + "; mapping completion: "
                                 + completionPercentage + "%");
                         }
                     }
@@ -143,7 +150,7 @@ namespace FileSynchronization
 
             var fileMapping = syncExec.FileMapping;
             var csvMappingToPersist = syncExec.CsvMappingToPersist;
-            string fileMappingCsvLocation = syncExec.SyncConfig.MappingCsvFileName;
+            string fileMappingCsvLocation = syncExec.SyncConfig.Parameters["FileMappingFile"]; 
 
             using (var writer = new CsvFileWriter(fileMappingCsvLocation))
             {

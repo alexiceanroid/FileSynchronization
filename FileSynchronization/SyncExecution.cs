@@ -159,16 +159,16 @@ namespace FileSynchronization
             return null;
         }
 
-        public bool FileMappingMissingFiles()
-        {
-            return FilesMissingInMapping.Count > 0;
-        }
+        //public bool FileMappingMissingFiles()
+        //{
+        //    return FilesMissingInMapping.Count > 0;
+        //}
 
-        public List<FileExtended> FilesMissingInMapping => FilesFromLists.Except(FilesFromMapping).ToList();
+        public IEnumerable<FileExtended> FilesMissingInMapping => FilesFromLists.Except(FilesFromMapping);
 
-        public List<FileExtended> FilesFromLists => SourceFiles.Union(DestFiles).ToList();
+        public IEnumerable<FileExtended> FilesFromLists => SourceFiles.Union(DestFiles);
 
-        public List<FileExtended> FilesFromMapping => FileMapping.Keys.Union(FileMapping.Values).ToList();
+        public IEnumerable<FileExtended> FilesFromMapping => FileMapping.Keys.Union(FileMapping.Values);
 
         public FileExtended GetFileByIdOrPath(FileType fileType, string fileId, string fullPath)
         {

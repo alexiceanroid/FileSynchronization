@@ -30,7 +30,7 @@ namespace FileSynchronization
         private const string spaceSeparator = "       ";
         public static void WriteErrorLog(SyncConfig confInstance, AppError error)
         {
-            string errorLogLocation = confInstance.LogFolder;
+            string errorLogLocation = confInstance.Parameters["LogFolder"];
             string errorLogName = confInstance.ErrorLogFile;
 
             if (!Directory.Exists(errorLogLocation))

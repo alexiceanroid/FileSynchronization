@@ -16,17 +16,26 @@ namespace FileSynchronization
     public class SyncConfig
     {
         public Dictionary<string, string> FolderMappings;
+        public Dictionary<string, string> Parameters;
+        public string AppConfigLocation { get; }
+        public string ErrorLogFile { get; }
+        public string ActionsPreviewLogFile { get; }
+
 
         public SyncConfig()
         {
             FolderMappings = new Dictionary<string, string>();
+            Parameters = new Dictionary<string, string>();
+            
 
             AppSettingsReader configReader = new AppSettingsReader();
-            AppConfigLocation = (string)configReader.GetValue("ConfigFile_" + Environment.MachineName, 
+            AppConfigLocation = (string) configReader.GetValue("ConfigFile_" + Environment.MachineName,
                 typeof(string));
 
-            LogFolder = GetConfigValueByName("LogFolder");
-            MappingCsvFileName = GetConfigValueByName("FileMappingFile");
+            InitializeFolderMappings();
+            InitializeParameters();
+            var LogFolder = Parameters["LogFolder"];
+            //MappingCsvFileName = GetConfigValueByName("FileMappingFile");
 
             var dateSuffix = DateTime.Now.Year + "-" + DateTime.Now.Month
                              + "-" + DateTime.Now.Day + "_" + DateTime.Now.Hour + "_" + DateTime.Now.Minute + ".log";
@@ -34,11 +43,35 @@ namespace FileSynchronization
             ActionsPreviewLogFile = String.Copy(LogFolder) + @"\actions_preview_" + dateSuffix;
         }
 
-        public string AppConfigLocation { get; }
-        public string MappingCsvFileName { get; }
-        public string LogFolder { get; }
-        public string ErrorLogFile { get; }
-        public string ActionsPreviewLogFile { get; set; }
+        private void InitializeParameters()
+        {
+            XElement root = XElement.Load(AppConfigLocation);
+            var parXml = root.Element("parameters").Elements("parameter");
+
+            foreach (XElement par in parXml)
+            {
+                string pName = par.FirstAttribute.Value;
+                string pVal = par.Value;
+
+                Parameters.Add(pName, pVal);
+            }
+        }
+
+
+        //public string MappingCsvFileName => Parameters["FileMappingFile"];
+        //public string LogFolder => Parameters["LogFolder"];
+        //public string ErrorLogFile 
+        //{
+        //    get
+        //    {
+        //        var dateSuffix = DateTime.Now.Year + "-" + DateTime.Now.Month
+        //                         + "-" + DateTime.Now.Day + "_" + DateTime.Now.Hour + "_" + DateTime.Now.Minute +
+        //                         ".log";
+        //        return String.Copy(LogFolder) + @"\error_" + dateSuffix;
+        //    }
+        //}
+
+        
 
         public void InitializeFolderMappings()
         {
@@ -77,6 +110,8 @@ namespace FileSynchronization
 
             return el.Value;
         }
+
+        
     }
  
 }

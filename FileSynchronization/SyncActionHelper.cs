@@ -202,14 +202,20 @@ namespace FileSynchronization
                     break;
             }
 
-            try
+            if (fileToDelete != null)
             {
-                File.Delete(fileToDelete.fullPath);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
+                try
+                {
+                    string pathForArchival = fileToDelete.basePath + @"\" 
+                        + SyncConfig.Parameters["ArchiveFolderName"]
+                        + @"\" + fileToDelete.FileName;
+                    File.Move(fileToDelete.fullPath,pathForArchival);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
             }
         }
     }

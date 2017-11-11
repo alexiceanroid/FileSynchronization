@@ -140,28 +140,33 @@ namespace FileSynchronization
                 var watchAddMissingFilesToMapping = new Stopwatch();
                 watchAddMissingFilesToMapping.Start();
 
-                var sourceFilesMissingInMapping = syncExec.FilesMissingInMapping.Where(x => x.fileType == FileType.Source);
-                var destFilesMissingInMapping = syncExec.FilesMissingInMapping.Where(x => x.fileType == FileType.Destination);
-                int expectedFileMappingEntriesCount = (new int[] { sourceFilesMissingInMapping.Count(),
-                    destFilesMissingInMapping.Count()}).Max();
+                var sourceFilesMissingInMapping = syncExec.FilesMissingInMapping.
+                    Where(x => x.fileType == FileType.Source).ToList();
+                var destFilesMissingInMapping = syncExec.FilesMissingInMapping.
+                    Where(x => x.fileType == FileType.Destination).ToList();
+                int expectedFileMappingEntriesCount = Math.Max(sourceFilesMissingInMapping.Count,
+                    destFilesMissingInMapping.Count);
                 var fileMappingFromPaths = syncExec.FileMappingFromPaths;
 
-                var sourceFilesWithoutCounterpart = new List<FileExtended>();
-                sourceFilesWithoutCounterpart.Capacity = expectedFileMappingEntriesCount;
+                var sourceFilesWithoutCounterpart = new List<FileExtended>
+                    { Capacity = expectedFileMappingEntriesCount};
 
                 var sourceFilesToProcess = new List<FileExtended>(sourceFilesMissingInMapping);
                 var destFilesToProcess = new List<FileExtended>(destFilesMissingInMapping);
 
                 Console.WriteLine();
-                Console.WriteLine("Starting populating missing FileMapping from paths:");
+                Console.WriteLine("Populating missing FileMapping from paths:");
 
+                int count = 0;
                 while (sourceFilesToProcess.Count > 0)
                 {
+                    count++;
                     int lastInd = sourceFilesToProcess.Count - 1;
                     FileExtended sourceFile = sourceFilesToProcess[lastInd];
                     FileExtended destMatch = null;
-                    foreach (var destFile in destFilesToProcess)
+                    for (int i = destFilesToProcess.Count-1; i>=0; i--)
                     {
+                        FileExtended destFile = destFilesToProcess[i];
                         if (destFile.RelativePath == sourceFile.RelativePath)
                         {
                             destMatch = destFile;
@@ -172,13 +177,12 @@ namespace FileSynchronization
                     {
                         destFilesToProcess.Remove(destMatch);
                         fileMappingFromPaths.Add(sourceFile,destMatch);
-                        DisplayCompletionInfo("entries added to file mapping", fileMappingFromPaths.Count,
-                            expectedFileMappingEntriesCount);
                     }
                     else
                     {
-                        foreach (var destFile in destFilesToProcess)
+                        for (int i = destFilesToProcess.Count - 1; i >= 0; i--)
                         {
+                            FileExtended destFile = destFilesToProcess[i];
                             if (destFile.FileNameAndSize == sourceFile.FileNameAndSize)
                             {
                                 destMatch = destFile;
@@ -189,8 +193,7 @@ namespace FileSynchronization
                         {
                             destFilesToProcess.Remove(destMatch);
                             fileMappingFromPaths.Add(sourceFile, destMatch);
-                            DisplayCompletionInfo("entries added to file mapping",fileMappingFromPaths.Count,
-                                expectedFileMappingEntriesCount);
+                            
                         }
                         else
                         {
@@ -198,20 +201,27 @@ namespace FileSynchronization
                         }
                     }
                     sourceFilesToProcess.Remove(sourceFile);
+                    DisplayCompletionInfo("files processed", count,
+                        syncExec.FilesMissingInMapping.Count() + count);
                 }
 
                 foreach (var sourceFile in sourceFilesWithoutCounterpart)
                 {
+                    count++;
                     fileMappingFromPaths.Add(sourceFile,null);
-                    DisplayCompletionInfo("entries added to file mapping", fileMappingFromPaths.Count,
-                        expectedFileMappingEntriesCount);
+                    DisplayCompletionInfo("files processed", count,
+                        syncExec.FilesMissingInMapping.Count() + count);
                 }
 
-                foreach (var destFile in destFilesToProcess)
+                while (destFilesToProcess.Count > 0)
                 {
+                    int destFileInd = destFilesToProcess.Count - 1;
+                    var destFile = destFilesToProcess[destFileInd];
+                    count++;
                     fileMappingFromPaths.Add(destFile,null);
-                    DisplayCompletionInfo("entries added to file mapping", fileMappingFromPaths.Count,
-                        expectedFileMappingEntriesCount);
+                    destFilesToProcess.Remove(destFile);
+                    DisplayCompletionInfo("files processed", count,
+                        destFilesToProcess.Count + count);
                 }
 
                 Console.Write("\rfinished populating missing FileMapping from paths. Added " + fileMappingFromPaths.Count + " entries.");
@@ -235,7 +245,7 @@ namespace FileSynchronization
             
             // append existing file mapping if app_config has been modified later than csv mapping file
             // or if csv file does not exist
-            if ( syncExec.FilesMissingInMapping.Count > 0)
+            if ( syncExec.FilesMissingInMapping.Any())
               
             { 
                 AddMissingFileMappingFromPaths(syncExec);

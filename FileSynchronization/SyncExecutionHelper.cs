@@ -330,7 +330,7 @@ namespace FileSynchronization
                 + filesMoved + filesRenamed + filesUpdated;
             if (filesProcessed > 1)
             {
-                Console.SetCursorPosition(0, Console.CursorTop - 6);
+                Console.SetCursorPosition(0, Console.CursorTop - 7);
             }
             Console.Write("\rfiles created:           " + filesCreated + "\n"
                           + "files updated:           " + filesUpdated + "\n"
