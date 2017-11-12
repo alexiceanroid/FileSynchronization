@@ -75,7 +75,9 @@ namespace FileSynchronization
 
             // Copy a file to another location and 
             // not overwrite the destination file if it already exists.
+            
             File.Copy(fileToCopy, newFileFullPath, false);
+
 
             // assuming the file has been successfully copied, compute its ID
             // then update the corresponding entry in file mapping
@@ -111,23 +113,17 @@ namespace FileSynchronization
         {
             string sourceFile = sourceFileExtended.fullPath;
             string destFile = destFileExtended.fullPath;
-            try
-            {
-                FileExtended newFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["new"];
-                FileExtended oldFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["old"];
+            
+            FileExtended newFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["new"];
+            FileExtended oldFile = GetOldAndNewFile(sourceFile, destFile, actionDirection)["old"];
 
-                string newFileFullPath = newFile.fullPath;
-                string oldFileFullPath = oldFile.fullPath;
+            string newFileFullPath = newFile.fullPath;
+            string oldFileFullPath = oldFile.fullPath;
 
-                // update file2 with file1
-                // update direction: newFileFullPath => oldFileFullPath
-                File.Copy(newFileFullPath, oldFileFullPath, true);
-                
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error occured during update operation: \n" + ex.Message);
-            }
+            // update file2 with file1
+            // update direction: newFileFullPath => oldFileFullPath
+            File.Copy(newFileFullPath, oldFileFullPath, true);
+            
         }
 
         public Dictionary<FileType, FileExtended> GetSourceAndDestFile(FileExtended file1, FileExtended file2)
@@ -204,18 +200,11 @@ namespace FileSynchronization
 
             if (fileToDelete != null)
             {
-                try
-                {
-                    string pathForArchival = fileToDelete.basePath + @"\" 
-                        + SyncConfig.Parameters["ArchiveFolderName"]
-                        + @"\" + fileToDelete.FileName;
-                    File.Move(fileToDelete.fullPath,pathForArchival);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
+                
+                string pathForArchival = SyncConfig.Parameters["ArchiveFolder"]
+                    + @"\" + fileToDelete.FileName;
+                string logFile = SyncConfig.SyncLog;
+                WorkingWithFiles.ArchiveFile(fileToDelete, logFile, pathForArchival);
             }
         }
     }

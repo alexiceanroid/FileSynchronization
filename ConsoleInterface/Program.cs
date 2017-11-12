@@ -34,7 +34,10 @@ namespace ConsoleInterface
                 confInstance = new SyncConfig();
                 string LogFolder = confInstance.Parameters["LogFolder"];
                 string MappingCsvFileName = confInstance.Parameters["FileMappingFile"];
-                
+                foreach (var entry in confInstance.FolderMappings)
+                {
+                    Console.WriteLine(entry.Key + "  <=>  " + entry.Value);
+                }
                 Console.WriteLine("Done");
 
                 
@@ -48,7 +51,9 @@ namespace ConsoleInterface
 
                 // remove duplicates if this is configured:
                 if (confInstance.Parameters["RemoveDuplicates"] == "yes")
-                    DuplicatesHandling.ShowDuplicates(syncExec);
+                    DuplicatesHandling.RemoveDuplicates(syncExec);
+
+                
 
                 // retrieve existing file mapping from CSV
                 // and, if necessary, create additional mapping from paths

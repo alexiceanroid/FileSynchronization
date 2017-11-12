@@ -44,9 +44,8 @@ namespace ConsoleInterface
                 source = filesDict[FileType.Source] != null ? filesDict[FileType.Source].fullPath : "";
                 dest = filesDict[FileType.Destination] != null ? filesDict[FileType.Destination].fullPath : "";
 
-                writer.WriteLine(source + "\n" +
-                                  direction + " " + action.ActionType + " " + direction + 
-                                  "\n" + dest);
+                writer.WriteLine(direction + action.ActionType + direction 
+                    + source + "   -   " + dest);
             }
         }
 

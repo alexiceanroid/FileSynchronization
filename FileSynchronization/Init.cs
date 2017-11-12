@@ -44,6 +44,9 @@ namespace FileSynchronization
             _totalSourceFilesCount = sourceFilesTemp.Count;
             _totalDestFilesCount = destFilesTemp.Count;
 
+            Console.WriteLine("Source files:      " + _totalSourceFilesCount);
+            Console.WriteLine("Destination Files: " + _totalDestFilesCount);
+
             Task[] populatingFilesTask = new Task[2];
             populatingFilesTask[0] = Task.Factory.StartNew(() =>
             {
@@ -53,6 +56,7 @@ namespace FileSynchronization
                 {
                     PopulateSourceFiles(syncExec, pair.Key, sourceFilesTemp);
                 }
+                //syncExec.SourceFiles.Sort();
                 watchSourceFiles.Stop();
             }
             );
@@ -65,16 +69,16 @@ namespace FileSynchronization
                     {
                         PopulateDestFiles(syncExec, pair.Value, destFilesTemp);
                     }
+                    //syncExec.DestFiles.Sort();
                     watchDestFiles.Stop();
                 }
             );
             Task.WaitAll(populatingFilesTask);
+
             watchInitFiles.Stop();
 
             
             Console.WriteLine("Done:");
-            Console.WriteLine("Source files:      " + syncExec.SourceFiles.Count);
-            Console.WriteLine("Destination files: " + syncExec.DestFiles.Count);
             Console.WriteLine($"Elapsed time: {FormatTime(watchInitFiles.ElapsedMilliseconds)}");
             //Console.WriteLine($"\tprocessed {_sourceFilesProcessed} of {_totalSourceFilesCount} source files");
             //Console.WriteLine($"\telapsed time: {FormatTime(watchSourceFiles.ElapsedMilliseconds)}");
@@ -103,25 +107,26 @@ namespace FileSynchronization
 
         private static void PopulateFileLists(string path, List<FileExtended> fileInfos, FileType fileType, List<string> filesList)
         {
-            string basePath = String.Copy(path);
-            //var fileList = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories);
+            int filesCount = filesList.Count;
+            var filesArray = new FileExtended[filesCount];
 
-            foreach (var file in filesList)
+            for (int i = 0; i < filesCount; i++)
             {
-                var filePath = String.Copy(file);
+                string filePath = filesList[i];
                 var fileInfo = new FileInfo(filePath);
                 var fileExtended = new FileExtended
                 (
                     fileType,
-                    basePath,
+                    path,
                     fileInfo.FullName,
                     fileInfo.LastWriteTime.ToString(CultureInfo.InvariantCulture),
                     Kernel32.GetCustomFileId(filePath)
                 );
 
-                fileInfos.Add(fileExtended);
+                filesArray[i] = fileExtended;
             }
-            
+
+            fileInfos.AddRange(filesArray);
         }
 
         
@@ -140,10 +145,17 @@ namespace FileSynchronization
                 var watchAddMissingFilesToMapping = new Stopwatch();
                 watchAddMissingFilesToMapping.Start();
 
+                //var relativePathComparer = new RelativePathComparer();
+                
+
                 var sourceFilesMissingInMapping = syncExec.FilesMissingInMapping.
                     Where(x => x.fileType == FileType.Source).ToList();
                 var destFilesMissingInMapping = syncExec.FilesMissingInMapping.
                     Where(x => x.fileType == FileType.Destination).ToList();
+
+                sourceFilesMissingInMapping.Sort();
+                destFilesMissingInMapping.Sort();
+
                 int expectedFileMappingEntriesCount = Math.Max(sourceFilesMissingInMapping.Count,
                     destFilesMissingInMapping.Count);
                 var fileMappingFromPaths = syncExec.FileMappingFromPaths;

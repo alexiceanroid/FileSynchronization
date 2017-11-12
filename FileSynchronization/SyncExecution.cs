@@ -75,10 +75,10 @@ namespace FileSynchronization
                 var f2BasePathMatchesValue = f2.basePath == folderMapping.Value;
 
                 if (
-                        (f1BasePathMatchesKey && f2BasePathMatchesValue)
-                        ||
-                        (f1BasePathMatchesValue && f2BasePathMatchesKey)
-                    )
+                    (f1BasePathMatchesKey && f2BasePathMatchesValue)
+                    ||
+                    (f1BasePathMatchesValue && f2BasePathMatchesKey)
+                )
                 {
                     basePathsCompatible = true;
                     break;
@@ -283,15 +283,6 @@ namespace FileSynchronization
                             filesDeleted++;
                             DisplaySyncProcessStats();
                             break;
-
-                        /*
-                    case ActionType.None:
-                        UpdateFileMapping(action);
-                        break;
-
-                    default:
-                        throw new Exception("Invalid file pair action: " + action.ActionType);
-                        */
                     }
                     action.SyncSuccess = true;
                 }

@@ -12,7 +12,13 @@ namespace FileSynchronization
         Destination
     }
 
-
+    public class RelativePathComparer : IComparer<FileExtended>
+    {
+        public int Compare(FileExtended f1, FileExtended f2)
+        {
+            return String.Compare(f1.RelativePath, f2.RelativePath,StringComparison.Ordinal);
+        }
+    }
 
     public class FileExtended : IEqualityComparer<FileExtended>, IComparable<FileExtended>
     {
@@ -64,7 +70,7 @@ namespace FileSynchronization
 
         public string FileName => Path.GetFileName(fullPath);
         public long FileSize => (new FileInfo(fullPath)).Length;
-        public string FileNameAndSize => FileName + FileSize.ToString();
+        public string FileNameAndSize => FileName +" - " + FileSize.ToString();
 
         public bool Equals(FileExtended x, FileExtended y)
         {
@@ -94,7 +100,18 @@ namespace FileSynchronization
 
         public int CompareTo(FileExtended otherFile)
         {
-            return String.Compare(fullPath, otherFile.fullPath, StringComparison.Ordinal);
+            int result;
+
+            var otherNameAndSize = otherFile.FileNameAndSize;
+            var otherPath = otherFile.fullPath;
+
+            result = String.Compare(FileNameAndSize, otherNameAndSize, StringComparison.Ordinal);
+            if (result == 0)
+            {
+                result = String.Compare(fullPath, otherPath, StringComparison.Ordinal);
+            }
+
+            return result;
         }
 
         public override string ToString()
