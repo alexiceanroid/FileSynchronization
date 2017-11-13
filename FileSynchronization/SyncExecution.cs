@@ -11,20 +11,21 @@ namespace FileSynchronization
 {
     public partial class SyncExecution
     {
-        public string FileMappingCsvLocation;
-        private List<FilePairAction> actionList;
-        private List<FilePairAction> failedActions;
+        
+        private List<FilePairAction> _actionList;
+        private List<FilePairAction> _failedActions;
+        private int _filesCreated;
+        private int _filesUpdated;
+        private int _filesRenamedMoved;
+        private int _filesRenamed;
+        private int _filesMoved;
+        private int _filesDeleted;
+        private int _spaceNeededInSource;
+        private int _spaceNeededInDestination;
+
         public readonly SyncConfig SyncConfig;
-
-        private int filesCreated { get; set; }
-        private int filesUpdated { get; set; }
-        private int filesRenamedMoved { get; set; }
-        private int filesRenamed { get; set; }
-        private int filesMoved { get; set; }
-        private int filesDeleted { get; set; }
-
-
-        public List<FilePairAction> FailedActions => failedActions;
+        public string FileMappingCsvLocation;
+        public List<FilePairAction> FailedActions => _failedActions;
 
         public List<FileExtended> SourceFiles { get; set; }
         public List<FileExtended> DestFiles { get; set; }
@@ -37,28 +38,81 @@ namespace FileSynchronization
         public Dictionary<FileExtended, FileExtended> FileMappingFromCsv { get; set; }
         public Dictionary<FileExtended, FileExtended> FileMappingFromPaths { get; set; }
 
+        public int SpaceNeededInSource => _spaceNeededInSource;
+        public int SpaceNeededInDestination => _spaceNeededInDestination;
+
+        private void CalculateSpaceNeeded()
+        {
+            long sourceDeletionSize = 0; // B
+            long sourceCreationSize = 0;
+            long destDeletionSize = 0;
+            long destCreationSize = 0;
+
+            var creationsAndDeletions =
+                ActionsList.FindAll(x => x.ActionType == ActionType.Create || x.ActionType == ActionType.Delete);
+            foreach (var action in creationsAndDeletions)
+            {
+                var files = WorkingWithFiles.GetSourceAndDestFile(action.File1, action.File2);
+                var sourceFile = files[FileType.Source];
+                var destFile = files[FileType.Destination];
+
+                if (action.ActionType == ActionType.Create)
+                {
+                    if (action.ActionDirection == Direction.SourceToDestination)
+                        destCreationSize += sourceFile.FileSize;
+                    else
+                    {
+                        sourceCreationSize += destFile.FileSize;
+                    }
+                }
+
+                if (action.ActionType == ActionType.Delete)
+                {
+                    if (action.ActionDirection == Direction.SourceToDestination)
+                    {
+                        destDeletionSize += destFile.FileSize;
+                    }
+                    else
+                    {
+                        sourceDeletionSize += sourceFile.FileSize;
+                    }
+                }
+            }
+
+            _spaceNeededInSource = (int) Math.Round( (double)(sourceCreationSize - sourceDeletionSize) / (1024*1024));
+            _spaceNeededInDestination = (int)Math.Round((double)(destCreationSize - destDeletionSize) / (1024 * 1024));
+        }
+
+        
+
+
+        
+
         public SyncExecution(SyncConfig SyncConfig)
         {
             this.SyncConfig = SyncConfig;
-            actionList = new List<FilePairAction>();
+            
+            _actionList = new List<FilePairAction>();
             SourceFiles = new List<FileExtended>();
             DestFiles = new List<FileExtended>();
             FileMappingFromCsv = new Dictionary<FileExtended, FileExtended>();
             FileMappingFromPaths = new Dictionary<FileExtended, FileExtended>();
-            failedActions = new List<FilePairAction>();
+            _failedActions = new List<FilePairAction>();
             CsvMappingToPersist = new List<CsvRow>();
+            _spaceNeededInSource = 0;
+            _spaceNeededInDestination = 0;
         }
 
         public bool AnyChangesNeeded
         {
             get
             {
-                int numOfChanges = actionList.FindAll(x => x.ActionType != ActionType.None).Count;
+                int numOfChanges = _actionList.FindAll(x => x.ActionType != ActionType.None).Count;
                 return numOfChanges > 0;
             }
         }
 
-        public List<FilePairAction> ActionsList => actionList;
+        public List<FilePairAction> ActionsList => _actionList;
 
         public Dictionary<FileExtended, FileExtended> FileMapping =>
             //(Dictionary<FileExtended, FileExtended>) 
@@ -243,7 +297,8 @@ namespace FileSynchronization
                 }
                 //Init.DisplayCompletionInfo("entries processed from file mapping", count, FileMapping.Count);
             }
-            actionList.Sort();
+            _actionList.Sort();
+            CalculateSpaceNeeded();
             Console.WriteLine("Actions list has been populated.");
         }
 
@@ -251,7 +306,7 @@ namespace FileSynchronization
         public void PerformActions()
         {
             Console.WriteLine();
-            var actionsToPerform = actionList.FindAll(x => x.ActionType != ActionType.None);
+            var actionsToPerform = _actionList.FindAll(x => x.ActionType != ActionType.None);
             if (actionsToPerform.Count == 0)
             {
                 Console.WriteLine("No changes have been detected - no actions needed");
@@ -265,7 +320,7 @@ namespace FileSynchronization
             Console.WriteLine("Starting synchronization....");
             foreach (var action in actionsToPerform)
             {
-                var filesDict = GetSourceAndDestFile(action.File1, action.File2);
+                var filesDict = WorkingWithFiles.GetSourceAndDestFile(action.File1, action.File2);
                 FileExtended sourceFile = filesDict[FileType.Source];
                 FileExtended destFile = filesDict[FileType.Destination];
 
@@ -277,37 +332,37 @@ namespace FileSynchronization
 
                         case ActionType.Create:
                             ActionCreate(sourceFile, destFile, action.ActionDirection);
-                            filesCreated++;
+                            _filesCreated++;
                             DisplaySyncProcessStats();
                             break;
 
                         case ActionType.Update:
                             ActionUpdate(sourceFile, destFile, action.ActionDirection);
-                            filesUpdated++;
+                            _filesUpdated++;
                             DisplaySyncProcessStats();
                             break;
 
                         case ActionType.RenameMove:
                             ActionRenameMove(sourceFile, destFile, action.ActionDirection);
-                            filesRenamedMoved++;
+                            _filesRenamedMoved++;
                             DisplaySyncProcessStats();
                             break;
 
                         case ActionType.Rename:
                             ActionRenameMove(sourceFile, destFile, action.ActionDirection);
-                            filesRenamed++;
+                            _filesRenamed++;
                             DisplaySyncProcessStats();
                             break;
 
                         case ActionType.Move:
                             ActionRenameMove(sourceFile, destFile, action.ActionDirection);
-                            filesMoved++;
+                            _filesMoved++;
                             DisplaySyncProcessStats();
                             break;
 
                         case ActionType.Delete:
                             ActionDelete(sourceFile, destFile, action.ActionDirection);
-                            filesDeleted++;
+                            _filesDeleted++;
                             DisplaySyncProcessStats();
                             break;
                     }
@@ -317,7 +372,7 @@ namespace FileSynchronization
                 {
                     action.SyncSuccess = false;
                     action.ExceptionMessage = ex.Message;
-                    failedActions.Add(action);
+                    _failedActions.Add(action);
                 }
             }
             syncWatch.Stop();

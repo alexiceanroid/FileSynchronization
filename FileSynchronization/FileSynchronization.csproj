@@ -47,7 +47,6 @@
   <ItemGroup>
     <Compile Include="CsvFileReader.cs" />
     <Compile Include="CsvFileWriter.cs" />
-    <Compile Include="DirectoryFilesProcessing.cs" />
     <Compile Include="DriveHelper.cs" />
     <Compile Include="DuplicatesHandling.cs" />
     <Compile Include="ErrorHandling.cs" />

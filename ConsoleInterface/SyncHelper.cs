@@ -40,7 +40,7 @@ namespace ConsoleInterface
                         throw new Exception("Ivalid direction");
                 }
 
-                var filesDict = syncExec.GetSourceAndDestFile(action.File1, action.File2);
+                var filesDict = WorkingWithFiles.GetSourceAndDestFile(action.File1, action.File2);
                 source = filesDict[FileType.Source] != null ? filesDict[FileType.Source].fullPath : "";
                 dest = filesDict[FileType.Destination] != null ? filesDict[FileType.Destination].fullPath : "";
 
@@ -68,14 +68,30 @@ namespace ConsoleInterface
             int filesToMove = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.Move).Count;
             int filesToDelete = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.Delete).Count;
 
+            string sourceVolume = DriveHelper.GetSourceVolume(syncExec.SyncConfig);
+            string destVolume = DriveHelper.GetDestVolume(syncExec.SyncConfig);
+
+            int sourceAvailableSpace = DriveHelper.GetVolumeAvailableSpace(sourceVolume);
+            int destAvailableSpace = DriveHelper.GetVolumeAvailableSpace(destVolume);
+
             Console.WriteLine("Files to create:            " + filesToCreate);
             Console.WriteLine("Files to update:            " + filesToUpdate);
             Console.WriteLine("Files to rename and move:   " + filesToRenameMove);
             Console.WriteLine("Files to rename:            " + filesToRename);
             Console.WriteLine("Files to move:              " + filesToMove);
             Console.WriteLine("Files to delete:            " + filesToDelete);
+            
             Console.WriteLine("For further details, please, see the actions log file -\n"
                 + syncExec.SyncConfig.ActionsPreviewLogFile);
+
+            Console.WriteLine("\nRequired space on disk " + sourceVolume + ": " + syncExec.SpaceNeededInSource + "MB. Available space: "
+                + sourceAvailableSpace + "MB");
+            Console.WriteLine("Required space on disk " + destVolume + ": " + syncExec.SpaceNeededInDestination + "MB. Available space: "
+                              + destAvailableSpace + "MB");
+            if (sourceAvailableSpace < syncExec.SpaceNeededInSource)
+                Console.WriteLine("WARNING: there is not enough available space for synchronization to complete. Disk " + sourceVolume);
+            if (destAvailableSpace < syncExec.SpaceNeededInDestination)
+                Console.WriteLine("WARNING: there is not enough available space for synchronization to complete. Disk " + destVolume);
         }
 
         internal static void WriteFailedActions(SyncExecution syncExec, StreamWriter writer)

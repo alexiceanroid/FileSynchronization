@@ -16,6 +16,7 @@ namespace FileSynchronization
             string newFileFullPath;
             string newFileLastWriteDate;
             string newFileId;
+            int availableSpaceForFile;
 
             string sourceFile = sourceFileExtended != null ?
                 sourceFileExtended.fullPath : "";
@@ -126,32 +127,7 @@ namespace FileSynchronization
             
         }
 
-        public Dictionary<FileType, FileExtended> GetSourceAndDestFile(FileExtended file1, FileExtended file2)
-        {
-            var files = new Dictionary<FileType, FileExtended>();
-            FileExtended sourceFile;
-            FileExtended destFile;
-
-            if (file1 == null)
-            {
-                sourceFile = file2.fileType == FileType.Source ? file2 : null;
-                destFile = file2.fileType == FileType.Destination ? file2 : null;
-            }
-            else if (file2 == null)
-            {
-                sourceFile = file1.fileType == FileType.Source ? file1 : null;
-                destFile = file1.fileType == FileType.Destination ? file1 : null;
-            }
-            else
-            {
-                sourceFile = file1.fileType == FileType.Source ? file1 : file2;
-                destFile = file2.fileType == FileType.Destination ? file2 : file1;
-            }
-            files.Add(FileType.Source, sourceFile);
-            files.Add(FileType.Destination, destFile);
-
-            return files;
-        }
+        
 
         private void ActionRenameMove(FileExtended sourceFileExtended, FileExtended destFileExtended, Direction actionDirection)
         {

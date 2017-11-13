@@ -35,14 +35,29 @@ namespace FileSynchronization
             }
             else
             {
-                var temp = File1.RelativePath.CompareTo(other.File1.RelativePath);
-                if (temp > 0)
+                if (File1 == null && other.File1 != null)
+                {
                     res = 1;
-                else if (temp < 0)
+                }
+                else if (File1 != null && other.File1 == null)
+                {
                     res = -1;
-                else
+                }
+                else if (File1 == null && other.File1 == null)
                 {
                     res = 0;
+                }
+                else
+                {
+                    var temp = File1.RelativePath.CompareTo(other.File1.RelativePath);
+                    if (temp > 0)
+                        res = 1;
+                    else if (temp < 0)
+                        res = -1;
+                    else
+                    {
+                        res = 0;
+                    }
                 }
             }
 
@@ -55,12 +70,12 @@ namespace FileSynchronization
     public enum ActionType
     {
         None,
+        Delete,
         Create, 
         Rename,
         Move,
         RenameMove,
-        Update,
-        Delete
+        Update
     }
 
     public enum Direction
