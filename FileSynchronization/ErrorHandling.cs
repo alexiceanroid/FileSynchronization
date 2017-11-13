@@ -38,7 +38,7 @@ namespace FileSynchronization
                 Directory.CreateDirectory(errorLogLocation);
             }
 
-            using (StreamWriter sw = File.CreateText(errorLogName))
+            using (StreamWriter sw = File.AppendText(errorLogName))
             {
                 sw.WriteLine("Logging started on " + DateTime.Now.
                     ToString(CultureInfo.InvariantCulture));

@@ -27,49 +27,78 @@ namespace ConsoleInterface
                     Environment.Exit(0);
             };
 
+            string MappingCsvFileName = "";
             SyncConfig confInstance = null;
             try
             {
-                Console.WriteLine("Initializing folder mappings...");
+                Console.WriteLine("Initializing configuration...");
                 confInstance = new SyncConfig();
                 string LogFolder = confInstance.Parameters["LogFolder"];
-                string MappingCsvFileName = confInstance.Parameters["FileMappingFile"];
+                MappingCsvFileName = confInstance.Parameters["FileMappingFile"];
                 foreach (var entry in confInstance.FolderMappings)
                 {
                     Console.WriteLine(entry.Key + "  <=>  " + entry.Value);
                 }
                 Console.WriteLine("Done");
+            }
+            
+            catch (Exception ex)
+            {
+                string mes = ex.Message;
+                ExitApp("Could not initialize configuration. Check error log file for details \n" + mes);
+            }
 
-                
 
-                var syncExec = new SyncExecution(confInstance);
+            var syncExec = new SyncExecution(confInstance);
 
-                
-
-                // initialize source and destination files:
+            // initialize source and destination files:
+            try
+            {
                 Init.InitializeFiles(syncExec);
+            }
+            catch (Exception e)
+            {
+                ExitApp("Could not initialize files. \n" + e.Message);
 
-                // remove duplicates if this is configured:
+            }
+
+            // remove duplicates if this is configured:
+            try
+            {
                 if (confInstance.Parameters["RemoveDuplicates"] == "yes")
                     DuplicatesHandling.RemoveDuplicates(syncExec);
+            }
+            catch (Exception e)
+            {
+                ExitApp("Could not remove duplicates. \n" + e.Message);
+            }
 
-                
 
+            try
+            {
                 // retrieve existing file mapping from CSV
                 // and, if necessary, create additional mapping from paths
-                Init.InitFileMapping(syncExec);
+                Init.MapFiles(syncExec);
+            }
+            catch (Exception e)
+            {
+                ExitApp("Could not map files. \n" + e.Message);
+            }
 
+            try
+            {
                 syncExec.AppendActionListWithUpdateCreateMove();
+            }
+            catch (Exception e)
+            {
+                ExitApp("Could not complete the stage of identifying updates, creations and moves. \n" + e.Message);
+            }
+            
 
-                if (!syncExec.AnyChangesNeeded)
-                {
-                    if (!File.Exists(MappingCsvFileName))
-                    {
-                        CSVHelper.SaveFileMappingToCsv(syncExec);
-                    }
-                    ExitApp("No changes detected");
-                }
+            
 
+            if (syncExec.AnyChangesNeeded)
+            {
                 SyncHelper.WriteActionsListToLog(syncExec);
                 SyncHelper.PreviewChangesStats(syncExec);
                 string proceedWithSync = "";
@@ -99,16 +128,26 @@ namespace ConsoleInterface
                 else
                 {
                     if (proceedWithSync == "yes")
-                        Console.WriteLine("Execution completed sucessfully.");
+                        Console.WriteLine("\n\nExecution completed sucessfully.");
                 }
+
+                if (!syncExec.AnyChangesNeeded)
+                {
+                    if (!File.Exists(MappingCsvFileName))
+                    {
+                        CSVHelper.SaveFileMappingToCsv(syncExec);
+                    }
+                }
+
+                ExitApp("");
             }
-            catch (Exception ex)
+            else
             {
-                ExitApp("Could not initialize folder mappings. \n" + ex.Message);
+                ExitApp("No changes needed");
             }
 
+
             
-            ExitApp("");
         }
 
 

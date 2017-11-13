@@ -338,7 +338,7 @@ namespace FileSynchronization
                           + "files renamed:           " + filesRenamed + "\n"
                           + "files moved:             " + filesMoved + "\n"
                           + "files deleted:           " + filesDeleted + "\n\n"
-                          + "completion percentage:   " + Math.Round(100*(double)filesProcessed/ActionsList.Count));
+                          + "completion percentage:   " + Math.Round(100*(double)filesProcessed/ActionsList.Count) + "%") ;
             
         }
 

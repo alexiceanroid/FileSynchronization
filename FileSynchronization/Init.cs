@@ -246,7 +246,7 @@ namespace FileSynchronization
             }
         }
 
-        public static void InitFileMapping(SyncExecution syncExec)
+        public static void MapFiles(SyncExecution syncExec)
         {
             var watchFileMapping = new Stopwatch();
             Console.WriteLine("\nPreparing file mapping...");

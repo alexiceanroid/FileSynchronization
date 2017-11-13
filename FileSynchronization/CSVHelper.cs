@@ -36,6 +36,7 @@ namespace FileSynchronization
                     using (CsvFileReader reader = new CsvFileReader(fileMappingCsvLocation))
                     {
                         CsvRow row = new CsvRow();
+                        int mappingsAdded = 0;
                         while (reader.ReadRow(row))
                         {
                             if (row.Count < 2)
@@ -73,12 +74,14 @@ namespace FileSynchronization
                                 if (fileMapping.ContainsKey(firstFileExtended))
                                     continue;
                                 fileMapping.Add(firstFileExtended, secondFileExtended);
+                                mappingsAdded++;
                             }
                             else
                             {
                                 if (secondFileExtended != null && !fileMapping.ContainsKey(secondFileExtended))
                                 {
                                     fileMapping.Add(secondFileExtended, null);
+                                    mappingsAdded++;
                                 }
                             }
 
@@ -106,10 +109,10 @@ namespace FileSynchronization
                                 syncExec.CsvMappingToPersist.Add(row);
                             }
                             linesRead++;
-                            int destFilesUnmappedCount =
+                            //int destFilesUnmappedCount =
                                 syncExec.FilesMissingInMapping.Count(s => s.fileType == FileType.Destination);
-                            completionPercentage = (int) Math.Round(100 * (double)linesRead 
-                                / (linesRead + destFilesUnmappedCount));
+                            completionPercentage = (int) Math.Round(100 * (double)mappingsAdded
+                                / (syncExec.DestFiles.Count));
                             Console.Write("\r\tlines read: " + linesRead + "; mapping completion: "
                                 + completionPercentage + "%");
                         }

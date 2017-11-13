@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -198,14 +199,28 @@ namespace FileSynchronization
             foreach (var filePair in FileMappingFromPaths)
             {
                 count++;
-                bool create = AddCreateAction(filePair);
-                if (create)
+                try
                 {
-                    continue;
+                    bool create = AddCreateAction(filePair);
+                    if (create)
+                    {
+                        continue;
+                    }
+                
+                
+                    AddMoveAction(filePair);
+                    AddUpdateAction(filePair);
+                }
+                catch (Exception e)
+                {
+                    // construct AppError
+                    string entry = "trying to identify action. File1: " + filePair.Key.fullPath
+                                   + "; File2: " + filePair.Value.fullPath;
+                    string method = MethodBase.GetCurrentMethod().ToString();
+                    var error = new AppError(DateTime.Now, method, entry, e.Message);
+                    ErrorHandling.WriteErrorLog(SyncConfig, error);
                 }
 
-                AddMoveAction(filePair);
-                AddUpdateAction(filePair);
 
                 //Init.DisplayCompletionInfo("entries processed from file mapping", count,FileMapping.Count);
             }
@@ -213,7 +228,19 @@ namespace FileSynchronization
             foreach (var filePair in FileMappingFromCsv)
             {
                 count++;
-                AddUpdateAction(filePair);
+                try
+                {
+                    AddUpdateAction(filePair);
+                }
+                catch (Exception e)
+                {
+                    // construct AppError
+                    string entry = "trying to identify action. File1: " + filePair.Key.fullPath
+                                   + "; File2: " + filePair.Value.fullPath;
+                    string method = MethodBase.GetCurrentMethod().ToString();
+                    var error = new AppError(DateTime.Now, method, entry, e.Message);
+                    ErrorHandling.WriteErrorLog(SyncConfig, error);
+                }
                 //Init.DisplayCompletionInfo("entries processed from file mapping", count, FileMapping.Count);
             }
             actionList.Sort();
@@ -295,7 +322,7 @@ namespace FileSynchronization
             }
             syncWatch.Stop();
 
-            Console.WriteLine("\nSynchronization complete! Elapsed time: " 
+            Console.WriteLine("\n\nSynchronization complete! Elapsed time: " 
                 + Init.FormatTime(syncWatch.ElapsedMilliseconds));
         }
 

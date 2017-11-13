@@ -53,6 +53,7 @@ namespace FileSynchronization
                 var error = new AppError(DateTime.Now, e.TargetSite.ToString(), 
                     "resolving path " + folderPath, e.Message);
                 ErrorHandling.WriteErrorLog(confInstance,error);
+                throw e;
             }
             
 

@@ -40,7 +40,7 @@ namespace FileSynchronization
 
             var dateSuffix = DateTime.Now.Year + "-" + DateTime.Now.Month
                              + "-" + DateTime.Now.Day + "_" + DateTime.Now.Hour + "_" + DateTime.Now.Minute + ".log";
-            // ErrorLogFile = String.Copy(LogFolder) + @"\error_" + dateSuffix;
+            ErrorLogFile = String.Copy(LogFolder) + @"\error_" + dateSuffix;
             ActionsPreviewLogFile = String.Copy(LogFolder) + @"\actions_preview_" + dateSuffix;
             SyncLog = String.Copy(LogFolder) + @"\sync_" + dateSuffix;
         }

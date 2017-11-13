@@ -101,7 +101,7 @@ namespace ConsoleInterface
 
         internal static void WriteFailedActionsToLog(SyncExecution syncExec)
         {
-            using (var logWriter = new StreamWriter(syncExec.SyncConfig.ErrorLogFile))
+            using (var logWriter = File.AppendText(syncExec.SyncConfig.ErrorLogFile))
             {
                 WriteFailedActions(syncExec, logWriter);
             }
