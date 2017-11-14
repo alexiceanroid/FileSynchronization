@@ -17,23 +17,33 @@ namespace FileSynchronization
         // the assumption is that CSV file has the following structure:
         // <firstFileType>,<firstBasePath>,<firstFileFullPath>,<firstFileId>,
         //    <secondFileType>,<secondBasePath>,<secondFullPath>,<secondFileId>
-        public static void InitFileMappingFromCsv(SyncExecution syncExec)
+        public static void InitFileMappingFromCsv(SyncExecution syncExec,string folderMappingKey)
         {
-            string fileMappingCsvLocation = syncExec.SyncConfig.Parameters["FileMappingFile"];
-            int expectedFileMappingCount = Math.Max(syncExec.SourceFiles.Count, syncExec.DestFiles.Count);
+            string sourceBasePath = syncExec.SyncConfig.FolderMappings[folderMappingKey].Item1;
+            string destBasePath = syncExec.SyncConfig.FolderMappings[folderMappingKey].Item2;
+            if (syncExec.SourceFiles.Count(f => f.Value.basePath == sourceBasePath) 
+                + syncExec.DestFiles.Count(f => f.Value.basePath == destBasePath) 
+                == 0)
+            {
+                throw new Exception(folderMappingKey 
+                    + "Could not perform the mapping: source and destination files have not been loaded yet.");
+            }
+            string fileMappingFolder = syncExec.SyncConfig.Parameters["FileMappingFolder"];
+            string FileMappingCsvFullPath = fileMappingFolder + @"\" + folderMappingKey + ".csv";
             int completionPercentage = 0;
             var linesRead = 0;
-            if (File.Exists(fileMappingCsvLocation))
+            Console.WriteLine("Fetching data from file " + FileMappingCsvFullPath + "...");
+            if (File.Exists(FileMappingCsvFullPath))
             {
-                syncExec.FileMappingCsvLocation = fileMappingCsvLocation;
-                var watchFileMappingFromCsv = new Stopwatch();
-                watchFileMappingFromCsv.Start();
+                //syncExec.FileMappingCsvLocation = FileMappingCsvFullPath;
+                //var watchFileMappingFromCsv = new Stopwatch();
+                //watchFileMappingFromCsv.Start();
                 var fileMapping = syncExec.FileMappingFromCsv;
-                Console.WriteLine("populating filemapping from csv:");
+                
                 // Read data from CSV file
                 try
                 {
-                    using (CsvFileReader reader = new CsvFileReader(fileMappingCsvLocation))
+                    using (CsvFileReader reader = new CsvFileReader(FileMappingCsvFullPath))
                     {
                         CsvRow row = new CsvRow();
                         int mappingsAdded = 0;
@@ -95,16 +105,7 @@ namespace FileSynchronization
 
                             }
                             // if this mapping needs to be persisted:
-                            else if (
-                                !(syncExec.SyncConfig.FolderMappings.ContainsKey(firstBasePath)
-                                  ||
-                                  syncExec.SyncConfig.FolderMappings.ContainsValue(firstBasePath)
-                                  ||
-                                  syncExec.SyncConfig.FolderMappings.ContainsKey(secondBasePath)
-                                  ||
-                                  syncExec.SyncConfig.FolderMappings.ContainsValue(secondBasePath)
-                                    )
-                                )
+                            else if (syncExec.SyncConfig.AreBasePathsIncluded(firstBasePath,secondBasePath))
                             {
                                 syncExec.CsvMappingToPersist.Add(row);
                             }
@@ -117,7 +118,7 @@ namespace FileSynchronization
                                 + completionPercentage + "%");
                         }
                     }
-                    Console.WriteLine("\ncompleted populating filemapping from csv");
+                    
                 }
                 catch (Exception ex)
                 {
@@ -128,15 +129,14 @@ namespace FileSynchronization
                 }
                 finally
                 {
-                    watchFileMappingFromCsv.Stop();
+                    //watchFileMappingFromCsv.Stop();
                     Console.WriteLine("file mapping lines read from csv: " + linesRead);
-                    Console.WriteLine("elapsed time: " +
-                                      Init.FormatTime(watchFileMappingFromCsv.ElapsedMilliseconds));
+                    
                 }
             }
             else
             {
-                Console.WriteLine("CSV file was not found, proceeding with populating from paths...");
+                Console.WriteLine("CSV file was not found, proceeding...");
             }
             
         }
@@ -145,62 +145,70 @@ namespace FileSynchronization
 
         public static void SaveFileMappingToCsv(SyncExecution syncExec)
         {
-            var watchSaveToCsv = new Stopwatch();
-            watchSaveToCsv.Start();
             Console.WriteLine();
             Console.WriteLine("Saving file mapping to CSV:");
             // Write data to CSV file
 
             var fileMapping = syncExec.FileMapping;
             var csvMappingToPersist = syncExec.CsvMappingToPersist;
-            string fileMappingCsvLocation = syncExec.SyncConfig.Parameters["FileMappingFile"]; 
+            string fileMappingCsvFolder = syncExec.SyncConfig.Parameters["FileMappingFolder"];
+            if (!Directory.Exists(fileMappingCsvFolder))
+                Directory.CreateDirectory(fileMappingCsvFolder);
 
-            using (var writer = new CsvFileWriter(fileMappingCsvLocation))
+            foreach (var folderPair in syncExec.SyncConfig.FolderMappings)
             {
-                foreach (var csvRow in csvMappingToPersist)
+                string fileMappingCsvLocation = fileMappingCsvFolder + @"\"
+                                                + folderPair.Key + ".csv";
+                string sourceFolder = folderPair.Value.Item1;
+                string destFolder = folderPair.Value.Item2;
+                List<CsvRow> csvMappingToPersistPartial = syncExec.GetFileMappingPersistentByFoldMapKey(folderPair.Key);
+                using (var writer = new CsvFileWriter(fileMappingCsvLocation))
                 {
-                    writer.WriteRow(csvRow);
-                }
+                    foreach (var csvRow in csvMappingToPersistPartial)
+                    {
+                        writer.WriteRow(csvRow);
+                    }
 
-                foreach (var filePair in fileMapping)
-                {
-                    var file1 = filePair.Key;
-                    var file2 = filePair.Value;
-                    string file2FileType;
-                    string file2BasePath;
-                    string file2FullPath;
-                    string file2FileID;
-                    if (file2 == null)
+                    foreach (var filePair in fileMapping)
                     {
-                        file2FileType = "";
-                        file2BasePath = "";
-                        file2FileID = "";
-                        file2FullPath = "";
+                        var file1 = filePair.Key;
+                        var file2 = filePair.Value;
+                        if (file1.basePath != sourceFolder && file1.basePath != destFolder)
+                            continue;
+                        string file2FileType;
+                        string file2BasePath;
+                        string file2FullPath;
+                        string file2FileID;
+                        if (file2 == null)
+                        {
+                            file2FileType = "";
+                            file2BasePath = "";
+                            file2FileID = "";
+                            file2FullPath = "";
+                        }
+                        else
+                        {
+                            file2FileType = file2.fileType.ToString();
+                            file2BasePath = file2.basePath;
+                            file2FileID = file2.fileID;
+                            file2FullPath = file2.fullPath;
+                        }
+                        var row = new CsvRow
+                        {
+                            file1.fileType.ToString(),
+                            file1.basePath,
+                            file1.fullPath,
+                            file1.fileID,
+                            file2FileType,
+                            file2BasePath,
+                            file2FullPath,
+                            file2FileID
+                        };
+                        writer.WriteRow(row);
                     }
-                    else
-                    {
-                        file2FileType = file2.fileType.ToString();
-                        file2BasePath = file2.basePath;
-                        file2FileID = file2.fileID;
-                        file2FullPath = file2.fullPath;
-                    }
-                    var row = new CsvRow
-                    {
-                        file1.fileType.ToString(),
-                        file1.basePath,
-                        file1.fullPath,
-                        file1.fileID,
-                        file2FileType,
-                        file2BasePath,
-                        file2FullPath,
-                        file2FileID
-                    };
-                    writer.WriteRow(row);
                 }
             }
             Console.WriteLine("\tsaving to CSV completed");
-            watchSaveToCsv.Stop();
-            Console.WriteLine("\telapsed time: "+Init.FormatTime(watchSaveToCsv.ElapsedMilliseconds));
         }
     }
 }

@@ -57,19 +57,21 @@ namespace FileSynchronization
                         newFilePath = newFilePath.Replace(fileNameWithoutExtension,
                             fileNameWithoutExtension + "_2");
                         File.Move(lastFile.fullPath, newFilePath);
-                        logMessage = "Archived file " + lastFile.FileName + " and changed its name to "
-                                     + Path.GetFileName(newFilePath);
+                        logMessage = "Archived file " + lastFile.fullPath + "(size " + lastFile.FileSize/(1024)
+                            + "KB) and changed its name to " + Path.GetFileName(newFilePath);
                     }
                     else
                     {
                         File.Delete(lastFile.fullPath);
-                        logMessage = "Deleted file " + lastFile.FileName;
+                        logMessage = "Deleted file " + lastFile.fullPath + "(size " + lastFile.FileSize / (1024)
+                            +"KB)";
                     }
                 }
                 else
                 {
                     File.Move(lastFile.fullPath, newFilePath);
-                    logMessage = "Archived file " + lastFile.FileName;
+                    logMessage = "Archived file " + lastFile.fullPath
+                                 + "(size " + lastFile.FileSize / (1024) + "KB)";
                 }
 
             }

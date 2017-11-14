@@ -15,7 +15,7 @@ namespace ConsoleInterface
     {
         static void Main(string[] args)
         {
-            
+            TestSpaceSizes();
             Console.WriteLine("Starting the FileSync app... \n"
                               + "If you want to stop its execution at any time, please, press CTRL+C");
 
@@ -33,11 +33,12 @@ namespace ConsoleInterface
             {
                 Console.WriteLine("Initializing configuration...");
                 confInstance = new SyncConfig();
-                string LogFolder = confInstance.Parameters["LogFolder"];
-                MappingCsvFileName = confInstance.Parameters["FileMappingFile"];
+                //string LogFolder = confInstance.Parameters["LogFolder"];
+                //MappingCsvFileName = confInstance.Parameters["FileMappingFile"];
+                Console.WriteLine("Folders for synchronization are following");
                 foreach (var entry in confInstance.FolderMappings)
                 {
-                    Console.WriteLine(entry.Key + "  <=>  " + entry.Value);
+                    Console.WriteLine(entry.Value.Item1 + "  <=>  " + entry.Value.Item2);
                 }
                 Console.WriteLine("Done");
             }
@@ -110,9 +111,7 @@ namespace ConsoleInterface
                     {
                         syncExec.PerformActions();
                         SyncHelper.WriteFailedActionsToLog(syncExec);
-
-                        if (syncExec.AnyChangesNeeded)
-                            CSVHelper.SaveFileMappingToCsv(syncExec);
+                        CSVHelper.SaveFileMappingToCsv(syncExec);
                     }
                     else if (proceedWithSync == "no")
                     {
@@ -131,18 +130,13 @@ namespace ConsoleInterface
                         Console.WriteLine("\n\nExecution completed sucessfully.");
                 }
 
-                if (!syncExec.AnyChangesNeeded)
-                {
-                    if (!File.Exists(MappingCsvFileName))
-                    {
-                        CSVHelper.SaveFileMappingToCsv(syncExec);
-                    }
-                }
+                
 
                 ExitApp("");
             }
             else
             {
+                CSVHelper.SaveFileMappingToCsv(syncExec);
                 ExitApp("No changes needed");
             }
 
@@ -170,14 +164,14 @@ namespace ConsoleInterface
         static void ListFilesLists(SyncExecution syncExec)
         {
             Console.WriteLine("source files:");
-            foreach (var s in syncExec.SourceFiles)
+            foreach (var s in syncExec.SourceFiles.Values)
             {
                 Console.WriteLine(s.fullPath);
                 Console.WriteLine(s.fileID);
             }
 
             Console.WriteLine("\ndest files:");
-            foreach (var d in syncExec.DestFiles)
+            foreach (var d in syncExec.DestFiles.Values)
             {
                 Console.WriteLine(d.fullPath);
                 Console.WriteLine(d.fileID);
@@ -193,6 +187,13 @@ namespace ConsoleInterface
                 lastWriteDate, fileId);
 
             Console.WriteLine(f);
+        }
+
+        static void TestSpaceSizes()
+        {
+            string disk = @"C:\";
+            int x = DriveHelper.GetVolumeAvailableSpace(disk);
+            Console.WriteLine("Available space on " + disk + ": " + x + "MB");
         }
     }
 }

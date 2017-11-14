@@ -63,19 +63,19 @@ namespace FileSynchronization
 
         public static string GetSourceVolume(SyncConfig confInstance)
         {
-            return Path.GetPathRoot(confInstance.FolderMappings.Keys.FirstOrDefault());
+            return Path.GetPathRoot(confInstance.FolderMappings.Values.FirstOrDefault().Item1);
         }
 
         public static string GetDestVolume(SyncConfig confInstance)
         {
-            return Path.GetPathRoot(confInstance.FolderMappings.Values.FirstOrDefault());
+            return Path.GetPathRoot(confInstance.FolderMappings.Values.FirstOrDefault().Item2);
         }
 
         public static int GetVolumeAvailableSpace(string vol)
         {
             var volumeInfo = new DriveInfo(vol);
 
-            return (int)volumeInfo.AvailableFreeSpace / (1024 * 1024); // MB
+            return (int)Math.Abs( (double)volumeInfo.TotalFreeSpace / (1024 * 1024)); // MB
         }
     }
 }

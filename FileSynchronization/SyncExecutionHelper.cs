@@ -266,8 +266,11 @@ namespace FileSynchronization
         {
             var filesDict = new Dictionary<string, FileExtended>();
 
-            var sourceFileExtended = SourceFiles.FirstOrDefault(x => x.fullPath == sourceFile);
-            var destFileExtended = DestFiles.FirstOrDefault(x => x.fullPath == destFile);
+            var sourceFileId = Kernel32.GetCustomFileId(sourceFile);
+            var destFileId = Kernel32.GetCustomFileId(destFile);
+
+            var sourceFileExtended = SourceFiles[sourceFileId];
+            var destFileExtended = DestFiles[destFileId];
 
             FileExtended file1, file2;
             switch (actionDirection)

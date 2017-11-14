@@ -17,13 +17,15 @@ namespace FileSynchronization
             var w = new Stopwatch();
             w.Start();
             Console.WriteLine();
-            Console.WriteLine("Removing duplicates...");
+            Console.WriteLine("Checking for duplicate files...");
             
-            syncExec.SourceFiles.Sort();
-            syncExec.DestFiles.Sort();
+            var sourceFilesList = syncExec.SourceFiles.Values.ToList();
+            var destFilesList = syncExec.DestFiles.Values.ToList();
+            sourceFilesList.Sort();
+            destFilesList.Sort();
 
-            var sourceFilesToProcess = new List<FileExtended>(syncExec.SourceFiles);
-            var destFilesToProcess = new List<FileExtended>(syncExec.DestFiles);
+            var sourceFilesToProcess = new List<FileExtended>(sourceFilesList);
+            var destFilesToProcess = new List<FileExtended>(destFilesList);
 
             
 
@@ -33,16 +35,23 @@ namespace FileSynchronization
             CollectDuplicateFiles(sourceFilesToProcess, duplSourceFiles);
             CollectDuplicateFiles(destFilesToProcess, duplDestFiles);
 
+            if (duplSourceFiles.Count == 0 && duplDestFiles.Count == 0)
+            {
+                Console.WriteLine("No duplicates have been found");
+            }
+            else
+            {
+                Console.WriteLine("Some duplicates found");
+                Console.WriteLine("performing cleanup...");
+                CleanupDuplicateFiles(duplSourceFiles, FileType.Source, syncExec);
+                CleanupDuplicateFiles(duplDestFiles, FileType.Destination, syncExec);
+                Console.WriteLine("Cleanup complete");
+            }
 
-            CleanupDuplicateFiles(duplSourceFiles, FileType.Source, syncExec);
-            CleanupDuplicateFiles(duplDestFiles, FileType.Destination, syncExec);
 
-
-            
             //WriteToLog(duplSourceFiles, duplDestFiles, logFile);
 
             w.Stop();
-            Console.WriteLine("Done.");
             Console.WriteLine("elapsed time: " + Init.FormatTime(w.ElapsedMilliseconds));
         }
 
@@ -68,7 +77,7 @@ namespace FileSynchronization
 
                     tempFiles.Remove(lastFile);
                     duplFiles.Remove(lastFile);
-                    filesList.Remove(lastFile);
+                    filesList.Remove(lastFile.fileID);
                     WorkingWithFiles.ArchiveFile(lastFile, syncLog, archiveFolder);
                 }
             }

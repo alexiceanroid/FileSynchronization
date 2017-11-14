@@ -15,7 +15,7 @@ namespace FileSynchronization
 
     public class SyncConfig
     {
-        public Dictionary<string, string> FolderMappings;
+        public Dictionary<string, Tuple<string, string>> FolderMappings;
         public Dictionary<string, string> Parameters;
         public string AppConfigLocation { get; }
         public string ErrorLogFile { get; }
@@ -25,7 +25,7 @@ namespace FileSynchronization
 
         public SyncConfig()
         {
-            FolderMappings = new Dictionary<string, string>();
+            FolderMappings = new Dictionary<string,Tuple<string, string>>();
             Parameters = new Dictionary<string, string>();
             
 
@@ -83,6 +83,7 @@ namespace FileSynchronization
 
             foreach (XElement el in mappingCollection)
             {
+                string mappingName = el.FirstAttribute.Value;
                 string sourceFolder = el.Element("SourceFolder").Value;
                 string destFolder = el.Element("DestinationFolder").Value;
 
@@ -94,7 +95,8 @@ namespace FileSynchronization
                                                          + sourceFolder + "\n"
                                                          + destFolder);
 
-                FolderMappings.Add(sourceFolderResolved, destFolderResolved);
+                var folderPair = new Tuple<string, string>(sourceFolderResolved,destFolderResolved);
+                FolderMappings.Add(mappingName, folderPair);
             }
         }
 
@@ -113,7 +115,28 @@ namespace FileSynchronization
             return el.Value;
         }
 
-        
+
+        public bool AreBasePathsIncluded(string firstBasePath, string secondBasePath)
+        {
+            bool res = false;
+
+            foreach (var folderPair in FolderMappings)
+            {
+                if (
+                    (firstBasePath == folderPair.Value.Item1 && secondBasePath == folderPair.Value.Item2)
+                    ||
+                    (firstBasePath == folderPair.Value.Item2 && secondBasePath == folderPair.Value.Item1)
+                )
+                {
+                    res = true;
+                    break;
+                }
+
+            }
+
+
+            return res;
+        }
     }
  
 }

@@ -23,7 +23,8 @@ namespace FileSynchronization
         public static void InitializeFiles(SyncExecution syncExec)
         {
             Console.WriteLine("\n");
-            Console.WriteLine("Populating source and destination files lists...");
+            Console.WriteLine("Fetching source and destination files...");
+
             var folderMappings = syncExec.SyncConfig.FolderMappings;
             var watchInitFiles = new Stopwatch();
             var watchSourceFiles = new Stopwatch();
@@ -37,8 +38,8 @@ namespace FileSynchronization
             
             foreach (var pair in folderMappings)
             {
-                WorkingWithFiles.GetFiles(pair.Key, sourceFilesTemp);
-                WorkingWithFiles.GetFiles(pair.Value, destFilesTemp);
+                WorkingWithFiles.GetFiles(pair.Value.Item1, sourceFilesTemp);
+                WorkingWithFiles.GetFiles(pair.Value.Item2, destFilesTemp);
             }
 
             _totalSourceFilesCount = sourceFilesTemp.Count;
@@ -47,31 +48,32 @@ namespace FileSynchronization
             Console.WriteLine("Source files:      " + _totalSourceFilesCount);
             Console.WriteLine("Destination Files: " + _totalDestFilesCount);
 
+            Console.WriteLine("Populating source and destination files lists...");
             Task[] populatingFilesTask = new Task[2];
             populatingFilesTask[0] = Task.Factory.StartNew(() =>
             {
-                watchSourceFiles.Start();
-                syncExec.SourceFiles.Capacity = _totalSourceFilesCount;
+                //watchSourceFiles.Start();
+
                 foreach (var pair in folderMappings)
                 {
-                    PopulateSourceFiles(syncExec, pair.Key, sourceFilesTemp);
+                    PopulateSourceFiles(syncExec, pair.Value.Item1, sourceFilesTemp);
                 }
-                //syncExec.SourceFiles.Sort();
-                watchSourceFiles.Stop();
-            }
+            //syncExec.SourceFiles.Sort();
+            //watchSourceFiles.Stop();
+        }
             );
 
             populatingFilesTask[1] = Task.Factory.StartNew(() =>
                 {
-                    watchDestFiles.Start();
-                    syncExec.DestFiles.Capacity = _totalDestFilesCount;
+            //        watchDestFiles.Start();
+                    
                     foreach (var pair in folderMappings)
                     {
-                        PopulateDestFiles(syncExec, pair.Value, destFilesTemp);
+                        PopulateDestFiles(syncExec, pair.Value.Item2, destFilesTemp);
                     }
-                    //syncExec.DestFiles.Sort();
-                    watchDestFiles.Stop();
-                }
+            //syncExec.DestFiles.Sort();
+            //        watchDestFiles.Stop();
+        }
             );
             Task.WaitAll(populatingFilesTask);
 
@@ -105,28 +107,26 @@ namespace FileSynchronization
             PopulateFileLists(sourceFolder, syncExec.SourceFiles,FileType.Source, filesList);
         }
 
-        private static void PopulateFileLists(string path, List<FileExtended> fileInfos, FileType fileType, List<string> filesList)
+        private static void PopulateFileLists(string path, Dictionary<string,FileExtended> filesList, FileType fileType, List<string> filesPaths)
         {
-            int filesCount = filesList.Count;
-            var filesArray = new FileExtended[filesCount];
+            var filesInFolder = filesPaths.FindAll(x => x.Contains(path));
 
-            for (int i = 0; i < filesCount; i++)
+            foreach(var filePath in filesInFolder)
             {
-                string filePath = filesList[i];
                 var fileInfo = new FileInfo(filePath);
                 var fileExtended = new FileExtended
                 (
                     fileType,
                     path,
                     fileInfo.FullName,
-                    fileInfo.LastWriteTime.ToString(CultureInfo.InvariantCulture),
                     Kernel32.GetCustomFileId(filePath)
                 );
 
-                filesArray[i] = fileExtended;
+                //filesArray[i] = fileExtended;
+                filesList.Add(fileExtended.fileID,fileExtended);
             }
 
-            fileInfos.AddRange(filesArray);
+            
         }
 
         
@@ -251,10 +251,13 @@ namespace FileSynchronization
             var watchFileMapping = new Stopwatch();
             Console.WriteLine("\nPreparing file mapping...");
             watchFileMapping.Start();
+            Console.WriteLine("populating filemapping from csv:");
+            foreach (var folderPair in syncExec.SyncConfig.FolderMappings)
+            {
+                CSVHelper.InitFileMappingFromCsv(syncExec,folderPair.Key);
+            }
+            Console.WriteLine("\ncompleted populating filemapping from csv");
 
-            CSVHelper.InitFileMappingFromCsv(syncExec);
-
-            
             // append existing file mapping if app_config has been modified later than csv mapping file
             // or if csv file does not exist
             if ( syncExec.FilesMissingInMapping.Any())

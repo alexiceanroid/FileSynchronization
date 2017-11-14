@@ -24,11 +24,11 @@ namespace FileSynchronization
         private int _spaceNeededInDestination;
 
         public readonly SyncConfig SyncConfig;
-        public string FileMappingCsvLocation;
+        //public string FileMappingCsvLocation;
         public List<FilePairAction> FailedActions => _failedActions;
 
-        public List<FileExtended> SourceFiles { get; set; }
-        public List<FileExtended> DestFiles { get; set; }
+        public Dictionary<string,FileExtended> SourceFiles { get; set; }
+        public Dictionary<string,FileExtended> DestFiles { get; set; }
 
         // this is mapping from existing csv file for folder mapping
         //  that is no longer found in config file. This, however, can be needed
@@ -93,8 +93,8 @@ namespace FileSynchronization
             this.SyncConfig = SyncConfig;
             
             _actionList = new List<FilePairAction>();
-            SourceFiles = new List<FileExtended>();
-            DestFiles = new List<FileExtended>();
+            SourceFiles = new Dictionary<string, FileExtended>();
+            DestFiles = new Dictionary<string, FileExtended>();
             FileMappingFromCsv = new Dictionary<FileExtended, FileExtended>();
             FileMappingFromPaths = new Dictionary<FileExtended, FileExtended>();
             _failedActions = new List<FilePairAction>();
@@ -124,10 +124,10 @@ namespace FileSynchronization
             var basePathsCompatible = false;
             foreach (var folderMapping in SyncConfig.FolderMappings)
             {
-                var f1BasePathMatchesKey = f1.basePath == folderMapping.Key;
-                var f1BasePathMatchesValue = f1.basePath == folderMapping.Value;
-                var f2BasePathMatchesKey = f2.basePath == folderMapping.Key;
-                var f2BasePathMatchesValue = f2.basePath == folderMapping.Value;
+                var f1BasePathMatchesKey = f1.basePath == folderMapping.Value.Item1;
+                var f1BasePathMatchesValue = f1.basePath == folderMapping.Value.Item2;
+                var f2BasePathMatchesKey = f2.basePath == folderMapping.Value.Item1;
+                var f2BasePathMatchesValue = f2.basePath == folderMapping.Value.Item2;
 
                 if (
                     (f1BasePathMatchesKey && f2BasePathMatchesValue)
@@ -152,14 +152,14 @@ namespace FileSynchronization
         public FileExtended GetFileCounterpart(FileExtended f)
         {
             FileExtended resultingFile = null;
-            List<FileExtended> filesListToSearch;
+            Dictionary<string,FileExtended> filesListToSearch;
             filesListToSearch = f.fileType == FileType.Source ? DestFiles : SourceFiles;
 
             foreach (var candidateFile in filesListToSearch)
             {
-                if (FilesMatchBasedOnPaths(f, candidateFile))
+                if (FilesMatchBasedOnPaths(f, candidateFile.Value))
                 {
-                    resultingFile = candidateFile;
+                    resultingFile = candidateFile.Value;
                     break;
                 }
             }
@@ -169,7 +169,8 @@ namespace FileSynchronization
 
         public FileExtended GetFileById(FileType fileType, string id)
         {
-            List<FileExtended> listToSearch;
+            FileExtended resultingFile = null;
+            Dictionary<string,FileExtended> listToSearch;
             switch (fileType)
             {
                 case FileType.Source:
@@ -181,21 +182,17 @@ namespace FileSynchronization
                 default:
                     throw new Exception("Unknown file type!");
             }
-
-            foreach (var file in listToSearch)
+            if (listToSearch.ContainsKey(id))
             {
-                if (file.fileID == id)
-                {
-                    return file;
-                }
+                resultingFile = listToSearch[id];
             }
 
-            return null;
+            return resultingFile;
         }
 
         public FileExtended GetFileByFullPath(string fullPath)
         {
-            foreach (var file in SourceFiles)
+            foreach (var file in SourceFiles.Values)
             {
                 if (file.fullPath == fullPath)
                 {
@@ -203,7 +200,7 @@ namespace FileSynchronization
                 }
             }
 
-            foreach (var file in DestFiles)
+            foreach (var file in DestFiles.Values)
             {
                 if (file.fullPath == fullPath)
                 {
@@ -221,7 +218,7 @@ namespace FileSynchronization
 
         public IEnumerable<FileExtended> FilesMissingInMapping => FilesFromLists.Except(FilesFromMapping);
 
-        public IEnumerable<FileExtended> FilesFromLists => SourceFiles.Union(DestFiles);
+        public IEnumerable<FileExtended> FilesFromLists => SourceFiles.Values.Union(DestFiles.Values);
 
         public IEnumerable<FileExtended> FilesFromMapping => FileMapping.Keys.Union(FileMapping.Values);
 
@@ -299,7 +296,7 @@ namespace FileSynchronization
             }
             _actionList.Sort();
             CalculateSpaceNeeded();
-            Console.WriteLine("Actions list has been populated.");
+            Console.WriteLine("Done.");
         }
 
 
@@ -379,6 +376,25 @@ namespace FileSynchronization
 
             Console.WriteLine("\n\nSynchronization complete! Elapsed time: " 
                 + Init.FormatTime(syncWatch.ElapsedMilliseconds));
+        }
+
+
+        public List<CsvRow> GetFileMappingPersistentByFoldMapKey(string folderMappingKey)
+        {
+            string sourceFolder = SyncConfig.FolderMappings[folderMappingKey].Item1;
+            string destFolder = SyncConfig.FolderMappings[folderMappingKey].Item2;
+            return CsvMappingToPersist.FindAll(m =>
+            {
+                string folder1 = m[1];
+                string folder2 = m[5];
+                if (
+                    (folder1 == sourceFolder && folder2 == destFolder)
+                    ||
+                    (folder2 == sourceFolder && folder1 == destFolder)
+                )
+                    return true;
+                return false;
+            });
         }
 
         
