@@ -48,39 +48,39 @@ namespace FileSynchronization
             Console.WriteLine("Source files:      " + _totalSourceFilesCount);
             Console.WriteLine("Destination Files: " + _totalDestFilesCount);
 
-            Console.WriteLine("Populating source and destination files lists...");
-            Task[] populatingFilesTask = new Task[2];
-            populatingFilesTask[0] = Task.Factory.StartNew(() =>
-            {
+            Console.WriteLine("Populating source files list...");
+            //Task[] populatingFilesTask = new Task[2];
+            //populatingFilesTask[0] = Task.Factory.StartNew(() =>
+            //{
                 //watchSourceFiles.Start();
-
                 foreach (var pair in folderMappings)
                 {
                     PopulateSourceFiles(syncExec, pair.Value.Item1, sourceFilesTemp);
                 }
             //syncExec.SourceFiles.Sort();
             //watchSourceFiles.Stop();
-        }
-            );
+            //}
+            //);
 
-            populatingFilesTask[1] = Task.Factory.StartNew(() =>
-                {
+            //populatingFilesTask[1] = Task.Factory.StartNew(() =>
+            //    {
             //        watchDestFiles.Start();
-                    
-                    foreach (var pair in folderMappings)
+            Console.WriteLine("\rDone.                                                                      ");
+            Console.WriteLine("Populating destination files list...");
+            foreach (var pair in folderMappings)
                     {
                         PopulateDestFiles(syncExec, pair.Value.Item2, destFilesTemp);
                     }
             //syncExec.DestFiles.Sort();
             //        watchDestFiles.Stop();
-        }
-            );
-            Task.WaitAll(populatingFilesTask);
+            //}
+            //    );
+            //Task.WaitAll(populatingFilesTask);
 
-            watchInitFiles.Stop();
+            //watchInitFiles.Stop();
 
-            
-            Console.WriteLine("Done:");
+
+            Console.WriteLine("\rDone.                                                                      ");
             Console.WriteLine($"Elapsed time: {FormatTime(watchInitFiles.ElapsedMilliseconds)}");
             //Console.WriteLine($"\tprocessed {_sourceFilesProcessed} of {_totalSourceFilesCount} source files");
             //Console.WriteLine($"\telapsed time: {FormatTime(watchSourceFiles.ElapsedMilliseconds)}");
@@ -110,8 +110,9 @@ namespace FileSynchronization
         private static void PopulateFileLists(string path, Dictionary<string,FileExtended> filesList, FileType fileType, List<string> filesPaths)
         {
             var filesInFolder = filesPaths.FindAll(x => x.Contains(path));
-
-            foreach(var filePath in filesInFolder)
+            int totalFilesCount = filesPaths.Count;
+            
+            foreach (var filePath in filesInFolder)
             {
                 var fileInfo = new FileInfo(filePath);
                 var fileExtended = new FileExtended
@@ -123,7 +124,9 @@ namespace FileSynchronization
                 );
 
                 //filesArray[i] = fileExtended;
+                
                 filesList.Add(fileExtended.fileID,fileExtended);
+                DisplayCompletionInfo("completion percentage", filesList.Count, totalFilesCount);
             }
 
             
@@ -272,15 +275,66 @@ namespace FileSynchronization
 
         public static void DisplayCompletionInfo(string message, int currentStep, int someTotalCount)
         {
-            int completionPercentage =
-                (int)Math.Round(100 * (decimal)currentStep /
-                                someTotalCount);
-            if (completionPercentage > 100)
-            {
-                completionPercentage = 100;
-            }
-            Console.Write("\r" + message + ": " + currentStep + ". Completion percentage: "
-                          + completionPercentage + "%");
+            //int completionPercentage =
+            //    (int)Math.Round(100 * (decimal)currentStep /
+            //                    someTotalCount);
+            //if (completionPercentage > 100)
+            //{
+            //    completionPercentage = 100;
+            //}
+            //Console.Write("\r" + message + ": " + currentStep + ". Completion percentage: "
+            //              + completionPercentage + "%");
+            //draw empty progress bar
+            //Console.CursorLeft = 0;
+            //Console.Write("["); //start
+            //Console.CursorLeft = 32;
+            //Console.Write("]"); //end
+            //Console.CursorLeft = 1;
+            //float onechunk = 3.0f / someTotalCount;
+
+            //draw filled part
+            //int position = 1;
+            //for (int i = 0; i < onechunk * currentStep; i++)
+            //{
+            //    Console.BackgroundColor = ConsoleColor.Green;
+            //    Console.CursorLeft = position++;
+            //    Console.Write(" ");
+            //}
+
+            //draw unfilled part
+            //for (int i = position; i <= 31; i++)
+            //{
+            //    Console.BackgroundColor = ConsoleColor.Gray;
+            //    Console.CursorLeft = position++;
+            //    Console.Write(" ");
+            //}
+
+            //draw totals
+            //Console.CursorLeft = 35;
+            //Console.BackgroundColor = ConsoleColor.Black;
+            //Console.Write(currentStep.ToString() + " of " + someTotalCount.ToString() + "    "); //blanks at the end remove any excess
+
+            int barLength = 32;
+            float onechunk = 1f/barLength;
+            float completionRatio = (float) currentStep / someTotalCount;
+
+            int numberOfChunksToFill = (int)Math.Floor(completionRatio / onechunk);
+            int numberOfEmptyChunks = barLength - numberOfChunksToFill;
+
+            string completedBarPart = string.Concat(Enumerable.Repeat(" ", numberOfChunksToFill));
+            string emptyBarPart = string.Concat(Enumerable.Repeat(" ", numberOfEmptyChunks));
+
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.Write("\r[");
+
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.Write(completedBarPart);
+
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.Write(emptyBarPart);
+
+            //Console.BackgroundColor = ConsoleColor.Black;
+            Console.Write("]" + currentStep + " of " + someTotalCount);
         }
     }
 }

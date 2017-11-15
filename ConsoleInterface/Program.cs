@@ -15,7 +15,7 @@ namespace ConsoleInterface
     {
         static void Main(string[] args)
         {
-            TestSpaceSizes();
+            //TestSpaceSizes();
             Console.WriteLine("Starting the FileSync app... \n"
                               + "If you want to stop its execution at any time, please, press CTRL+C");
 
