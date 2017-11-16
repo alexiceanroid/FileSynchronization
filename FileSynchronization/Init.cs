@@ -130,8 +130,7 @@ namespace FileSynchronization
                 DisplayCompletionInfo("completion percentage", filesAdded, totalFilesCount);
             }
 
-            return filesArray.ToDictionary(f => f.fileID, f => 
-                new FileExtended(f.fileType,f.basePath,f.fullPath,f.fileID));
+            return filesArray.ToDictionary(f => f.fileID, f => f);
         }
 
         
@@ -219,7 +218,7 @@ namespace FileSynchronization
                     }
                     sourceFilesToProcess.Remove(sourceFile);
                     DisplayCompletionInfo("files processed", count,
-                        syncExec.FilesMissingInMapping.Count() + count);
+                        syncExec.FilesMissingInMapping.Count() + 2*count);
                 }
 
                 foreach (var sourceFile in sourceFilesWithoutCounterpart)
@@ -261,7 +260,6 @@ namespace FileSynchronization
             {
                 CSVHelper.InitFileMappingFromCsv(syncExec,folderPair.Key);
             }
-            Console.WriteLine("\ncompleted populating filemapping from csv");
 
             // append existing file mapping if app_config has been modified later than csv mapping file
             // or if csv file does not exist

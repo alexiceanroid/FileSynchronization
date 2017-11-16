@@ -38,46 +38,49 @@ namespace FileSynchronization
             }
         }
 
-        public static void ArchiveFile(FileExtended lastFile, string log, string archiveFolder)
+        public static void ArchiveFile(FileExtended fileToArchive, string log, string archiveFolder)
         {
             string logMessage = "";
             try
             {
-                if (!Directory.Exists(archiveFolder))
-                    Directory.CreateDirectory(archiveFolder);
-                string newFilePath = archiveFolder + @"\" + lastFile.FileName;
+                
+                string newFilePath = archiveFolder + @"\" + fileToArchive.fullPath.Replace(":","");
+
+                string dir = Path.GetDirectoryName(newFilePath);
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
 
                 if (File.Exists(newFilePath))
                 {
                     var fileInfo = new FileInfo(newFilePath);
                     string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileInfo.Name);
                     long existingFileSize = fileInfo.Length;
-                    if (existingFileSize != lastFile.FileSize)
+                    if (existingFileSize != fileToArchive.FileSize)
                     {
                         newFilePath = newFilePath.Replace(fileNameWithoutExtension,
                             fileNameWithoutExtension + "_2");
-                        File.Move(lastFile.fullPath, newFilePath);
-                        logMessage = "Archived file " + lastFile.fullPath + "(size " + lastFile.FileSize/(1024)
+                        File.Move(fileToArchive.fullPath, newFilePath);
+                        logMessage = "Archived file " + fileToArchive.fullPath + "(size " + fileToArchive.FileSize/(1024)
                             + "KB) and changed its name to " + Path.GetFileName(newFilePath);
                     }
                     else
                     {
-                        File.Delete(lastFile.fullPath);
-                        logMessage = "Deleted file " + lastFile.fullPath + "(size " + lastFile.FileSize / (1024)
+                        File.Delete(fileToArchive.fullPath);
+                        logMessage = "Deleted file " + fileToArchive.fullPath + "(size " + fileToArchive.FileSize / (1024)
                             +"KB)";
                     }
                 }
                 else
                 {
-                    File.Move(lastFile.fullPath, newFilePath);
-                    logMessage = "Archived file " + lastFile.fullPath
-                                 + "(size " + lastFile.FileSize / (1024) + "KB)";
+                    File.Move(fileToArchive.fullPath, newFilePath);
+                    logMessage = "Archived file " + fileToArchive.fullPath
+                                 + "(size " + fileToArchive.FileSize / (1024) + "KB)";
                 }
 
             }
             catch (Exception e)
             {
-                logMessage = "Could not archive file " + lastFile.FileName
+                logMessage = "Could not archive file " + fileToArchive.FileName
                              + ": \n" + e.Message;
             }
             using (var logWriter = File.AppendText(log))

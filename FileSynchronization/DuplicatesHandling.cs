@@ -7,13 +7,16 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace FileSynchronization
 {
     public static class DuplicatesHandling
     {
+        
         public static void RemoveDuplicates(SyncExecution syncExec)
         {
+            
             var w = new Stopwatch();
             w.Start();
             Console.WriteLine();
@@ -21,6 +24,10 @@ namespace FileSynchronization
             
             var sourceFilesList = syncExec.SourceFiles.Values.ToList();
             var destFilesList = syncExec.DestFiles.Values.ToList();
+
+            ExcludeSomeFolders(sourceFilesList,syncExec.SyncConfig);
+            ExcludeSomeFolders(destFilesList, syncExec.SyncConfig);
+
             sourceFilesList.Sort();
             destFilesList.Sort();
 
@@ -41,11 +48,16 @@ namespace FileSynchronization
             }
             else
             {
-                Console.WriteLine("Some duplicates found");
-                Console.WriteLine("performing cleanup...");
+                Console.WriteLine("Duplicates found: \n" + 
+                                    "\tsource folders       " + duplSourceFiles.Count + "\n" +
+                                    "\tdestination folders  " + duplSourceFiles.Count);
+
+                Console.WriteLine("performing cleanup of source folders...");
                 CleanupDuplicateFiles(duplSourceFiles, FileType.Source, syncExec);
+
+                Console.WriteLine("performing cleanup of destination folders...");
                 CleanupDuplicateFiles(duplDestFiles, FileType.Destination, syncExec);
-                Console.WriteLine("Cleanup complete");
+                Console.WriteLine("\nCleanup complete");
             }
 
 
@@ -55,9 +67,26 @@ namespace FileSynchronization
             Console.WriteLine("elapsed time: " + Init.FormatTime(w.ElapsedMilliseconds));
         }
 
+        private static void ExcludeSomeFolders(List<FileExtended> filesList, SyncConfig syncConfig)
+        {
+            //var excludedFolders = new List<string>();
+            XElement root = XElement.Load(syncConfig.AppConfigLocation);
+            var foldersXml = root.Element("DuplicatesHandling")
+                .Element("ExcludedFolders")
+                .Elements("Folder");
+
+            foreach (var folder in foldersXml)
+            {
+                filesList.RemoveAll(x => x.fullPath.StartsWith(folder.Value));
+            }
+            
+        }
+
+
         private static void CleanupDuplicateFiles(List<FileExtended> duplFiles,FileType fileType,
             SyncExecution syncExec)
         {
+            var currentStep = 0;
             string syncLog = syncExec.SyncConfig.SyncLog;
             string archiveFolder = syncExec.SyncConfig.Parameters["ArchiveFolder"];
             var filesList = fileType == FileType.Source ? syncExec.SourceFiles : syncExec.DestFiles;
@@ -79,8 +108,12 @@ namespace FileSynchronization
                     duplFiles.Remove(lastFile);
                     filesList.Remove(lastFile.fileID);
                     WorkingWithFiles.ArchiveFile(lastFile, syncLog, archiveFolder);
+                    currentStep++;
+                    Init.DisplayCompletionInfo("files processed",
+                        currentStep,duplFiles.Count-duplValues.Count + currentStep);
                 }
             }
+            Console.Write("\rDone.                                                                ");
         }
 
         
@@ -88,6 +121,7 @@ namespace FileSynchronization
 
         private static void CollectDuplicateFiles(List<FileExtended> filesToProcess, List<FileExtended> duplFiles)
         {
+            
             bool isDuplicate;
             while (filesToProcess.Count > 0)
             {
