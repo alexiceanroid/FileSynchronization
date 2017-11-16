@@ -100,15 +100,21 @@ namespace ConsoleInterface
             {
                 var failedActions = new List<FilePairAction>(syncExec.FailedActions);
                 failedActions.Sort();
+                
                 writer.WriteLine("\n");
                 writer.WriteLine(failedActions.Count + 
                     " actions could not be performed:");
                 foreach (var action in failedActions)
                 {
+                    var sourceFile = WorkingWithFiles.GetSourceAndDestFile(action.File1, action.File2)[FileType.Source];
+                    var destFile = WorkingWithFiles.GetSourceAndDestFile(action.File1, action.File2)[FileType.Destination];
+                    var sourcePath = sourceFile != null ? sourceFile.fullPath : "";
+                    var destPath = destFile != null ? destFile.fullPath : "";
+
                     writer.WriteLine("\taction:       " + action.ActionType);
                     writer.WriteLine("\tdirection:    " + action.ActionDirection);
-                    writer.WriteLine("\tsource file:  " + action.File1.fullPath);
-                    writer.WriteLine("\tdest file:    " + action.File2.fullPath);
+                    writer.WriteLine("\tsource file:  " + sourcePath);
+                    writer.WriteLine("\tdest file:    " + destPath);
                     writer.WriteLine("\treason:       " + action.ExceptionMessage);
                     writer.WriteLine();
                 }

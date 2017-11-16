@@ -93,8 +93,8 @@ namespace FileSynchronization
             this.SyncConfig = SyncConfig;
             
             _actionList = new List<FilePairAction>();
-            SourceFiles = new Dictionary<string, FileExtended>();
-            DestFiles = new Dictionary<string, FileExtended>();
+            //SourceFiles = new Dictionary<string, FileExtended>();
+            //DestFiles = new Dictionary<string, FileExtended>();
             FileMappingFromCsv = new Dictionary<FileExtended, FileExtended>();
             FileMappingFromPaths = new Dictionary<FileExtended, FileExtended>();
             _failedActions = new List<FilePairAction>();

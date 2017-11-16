@@ -98,19 +98,21 @@ namespace FileSynchronization
 
         private static void PopulateDestFiles(SyncExecution syncExec, string destinationFolder, List<string> filesList)
         {
-            
-            PopulateFileLists(destinationFolder, syncExec.DestFiles,FileType.Destination, filesList);
+
+            syncExec.DestFiles = GetFilesDictionary(destinationFolder, filesList, FileType.Destination);
         }
 
         private static void PopulateSourceFiles(SyncExecution syncExec, string sourceFolder, List<string> filesList)
         {
-            PopulateFileLists(sourceFolder, syncExec.SourceFiles,FileType.Source, filesList);
+            syncExec.SourceFiles = GetFilesDictionary(sourceFolder, filesList, FileType.Source);
         }
 
-        private static void PopulateFileLists(string path, Dictionary<string,FileExtended> filesList, FileType fileType, List<string> filesPaths)
+        private static Dictionary<string, FileExtended> GetFilesDictionary(string path, List<string> filesPaths, FileType fileType)
         {
             var filesInFolder = filesPaths.FindAll(x => x.Contains(path));
+            int filesAdded = 0;
             int totalFilesCount = filesPaths.Count;
+            FileExtended[] filesArray = new FileExtended[totalFilesCount];
             
             foreach (var filePath in filesInFolder)
             {
@@ -123,13 +125,13 @@ namespace FileSynchronization
                     Kernel32.GetCustomFileId(filePath)
                 );
 
-                //filesArray[i] = fileExtended;
-                
-                filesList.Add(fileExtended.fileID,fileExtended);
-                DisplayCompletionInfo("completion percentage", filesList.Count, totalFilesCount);
+                filesArray[filesAdded] = fileExtended;
+                filesAdded++;
+                DisplayCompletionInfo("completion percentage", filesAdded, totalFilesCount);
             }
 
-            
+            return filesArray.ToDictionary(f => f.fileID, f => 
+                new FileExtended(f.fileType,f.basePath,f.fullPath,f.fileID));
         }
 
         
