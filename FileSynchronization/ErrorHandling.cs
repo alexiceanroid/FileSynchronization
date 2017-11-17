@@ -38,12 +38,12 @@ namespace FileSynchronization
                 Directory.CreateDirectory(errorLogLocation);
             }
 
-            using (StreamWriter sw = File.AppendText(errorLogName))
-            {
-                sw.WriteLine("Logging started on " + DateTime.Now.
-                    ToString(CultureInfo.InvariantCulture));
-                sw.WriteLine("\n\n");
-            }
+            //using (StreamWriter sw = File.AppendText(errorLogName))
+            //{
+            //    sw.WriteLine("Logging started on " + DateTime.Now.
+            //        ToString(CultureInfo.InvariantCulture));
+            //    sw.WriteLine("\n\n");
+            //}
 
             // construct log text line
             string timeStamp = error.DateTime.ToShortDateString() + error.DateTime.ToLongTimeString();

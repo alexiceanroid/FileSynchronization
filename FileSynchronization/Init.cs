@@ -99,16 +99,17 @@ namespace FileSynchronization
         private static void PopulateDestFiles(SyncExecution syncExec, string destinationFolder, List<string> filesList)
         {
 
-            syncExec.DestFiles = GetFilesDictionary(destinationFolder, filesList, FileType.Destination);
+            syncExec.DestFiles = GetFilesDictionary(syncExec.SyncConfig, destinationFolder, filesList, FileType.Destination);
         }
 
         private static void PopulateSourceFiles(SyncExecution syncExec, string sourceFolder, List<string> filesList)
         {
-            syncExec.SourceFiles = GetFilesDictionary(sourceFolder, filesList, FileType.Source);
+            syncExec.SourceFiles = GetFilesDictionary(syncExec.SyncConfig, sourceFolder, filesList, FileType.Source);
         }
 
-        private static Dictionary<string, FileExtended> GetFilesDictionary(string path, List<string> filesPaths, FileType fileType)
+        private static Dictionary<string, FileExtended> GetFilesDictionary(SyncConfig confInstance, string path, List<string> filesPaths, FileType fileType)
         {
+            bool someFilesFailed = false;
             var filesInFolder = filesPaths.FindAll(x => x.Contains(path));
             int filesAdded = 0;
             int totalFilesCount = filesPaths.Count;
@@ -116,6 +117,15 @@ namespace FileSynchronization
             
             foreach (var filePath in filesInFolder)
             {
+                if(filePath.Length >= 260)
+                {
+                    var timeStamp = DateTime.Now;
+                    var error = new AppError(timeStamp, "InitializeFiles",
+                        filePath, "the file path length greater than 260 is not supported by the app. Move it up the hierarchy or rename to a shorter name");
+                    ErrorHandling.WriteErrorLog(confInstance, error);
+                    someFilesFailed = true;
+                    continue;
+                }
                 var fileInfo = new FileInfo(filePath);
                 var fileExtended = new FileExtended
                 (
@@ -130,6 +140,8 @@ namespace FileSynchronization
                 DisplayCompletionInfo("completion percentage", filesAdded, totalFilesCount);
             }
 
+            if(someFilesFailed)
+                Console.WriteLine("Some files could not be added, please see the error log for details");
             return filesArray.ToDictionary(f => f.fileID, f => f);
         }
 

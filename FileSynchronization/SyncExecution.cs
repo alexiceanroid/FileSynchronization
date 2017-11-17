@@ -330,37 +330,50 @@ namespace FileSynchronization
                         case ActionType.Create:
                             ActionCreate(sourceFile, destFile, action.ActionDirection);
                             _filesCreated++;
-                            DisplaySyncProcessStats();
+                            //DisplaySyncProcessStats();
+                            Init.DisplayCompletionInfo("actions performed",
+                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
+                                ActionsList.Count);
                             break;
 
                         case ActionType.Update:
                             ActionUpdate(sourceFile, destFile, action.ActionDirection);
                             _filesUpdated++;
-                            DisplaySyncProcessStats();
+                            Init.DisplayCompletionInfo("actions performed",
+                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
+                                ActionsList.Count);
                             break;
 
                         case ActionType.RenameMove:
                             ActionRenameMove(sourceFile, destFile, action.ActionDirection);
                             _filesRenamedMoved++;
-                            DisplaySyncProcessStats();
+                            Init.DisplayCompletionInfo("actions performed",
+                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
+                                ActionsList.Count);
                             break;
 
                         case ActionType.Rename:
                             ActionRenameMove(sourceFile, destFile, action.ActionDirection);
                             _filesRenamed++;
-                            DisplaySyncProcessStats();
+                            Init.DisplayCompletionInfo("actions performed",
+                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
+                                ActionsList.Count);
                             break;
 
                         case ActionType.Move:
                             ActionRenameMove(sourceFile, destFile, action.ActionDirection);
                             _filesMoved++;
-                            DisplaySyncProcessStats();
+                            Init.DisplayCompletionInfo("actions performed",
+                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
+                                ActionsList.Count);
                             break;
 
                         case ActionType.Delete:
                             ActionDelete(sourceFile, destFile, action.ActionDirection);
                             _filesDeleted++;
-                            DisplaySyncProcessStats();
+                            Init.DisplayCompletionInfo("actions performed",
+                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
+                                ActionsList.Count);
                             break;
                     }
                     action.SyncSuccess = true;
