@@ -20,7 +20,7 @@ namespace FileSynchronization
         }
     }
 
-    public class FileExtended : IEqualityComparer<FileExtended>, IComparable<FileExtended>, IEquatable<FileExtended>
+    public class FileExtended : IComparable<FileExtended>
     {
         public readonly FileType fileType;
         public readonly string basePath;
@@ -72,23 +72,18 @@ namespace FileSynchronization
         public long FileSize => (new FileInfo(fullPath)).Length;
         public string FileNameAndSize => FileName +" - " + FileSize.ToString();
 
-        public bool Equals(FileExtended x, FileExtended y)
-        {
-            return x.GetHashCode() == y.GetHashCode();
-        }
-
-        public int GetHashCode(FileExtended obj)
-        {
-            return fileID.GetHashCode();
-        }
+        
 
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj == null) return false;
+            if (!(obj is FileExtended)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((FileExtended) obj);
+
+            var other = obj as FileExtended;
+
+            return fileID == other.fileID;
         }
 
         public override int GetHashCode()
@@ -101,12 +96,10 @@ namespace FileSynchronization
 
         public int CompareTo(FileExtended otherFile)
         {
-            int result;
-
             var otherNameAndSize = otherFile.FileNameAndSize;
             var otherPath = otherFile.fullPath;
 
-            result = String.Compare(FileNameAndSize, otherNameAndSize, StringComparison.Ordinal);
+            var result = String.Compare(FileNameAndSize, otherNameAndSize, StringComparison.Ordinal);
             if (result == 0)
             {
                 result = String.Compare(fullPath, otherPath, StringComparison.Ordinal);
@@ -126,16 +119,7 @@ namespace FileSynchronization
                    + "File size:       " + FileSize;
         }
 
-        public bool Equals(FileExtended other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other)) return true;
-            return fileType == other.fileType && string.Equals(fileID, other.fileID);
-        }
+        
     }
     
 }

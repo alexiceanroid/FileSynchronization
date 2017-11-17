@@ -265,14 +265,18 @@ namespace FileSynchronization
         public static void MapFiles(SyncExecution syncExec)
         {
             var watchFileMapping = new Stopwatch();
+            var watchFileMappingFromCsv = new Stopwatch();
             Console.WriteLine("\nPreparing file mapping...");
             watchFileMapping.Start();
+            watchFileMappingFromCsv.Start();
             Console.WriteLine("populating filemapping from csv:");
             foreach (var folderPair in syncExec.SyncConfig.FolderMappings)
             {
-                CSVHelper.InitFileMappingFromCsv(syncExec,folderPair.Key);
+                 CSVHelper.InitFileMappingFromCsv(syncExec,folderPair.Key);
             }
-
+            watchFileMappingFromCsv.Stop();
+            Console.WriteLine("Done. Elapsed time: " 
+                + FormatTime(watchFileMappingFromCsv.ElapsedMilliseconds));
             // append existing file mapping if app_config has been modified later than csv mapping file
             // or if csv file does not exist
             if ( syncExec.FilesMissingInMapping.Any())

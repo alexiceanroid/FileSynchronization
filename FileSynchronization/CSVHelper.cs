@@ -121,7 +121,7 @@ namespace FileSynchronization
                             }
                             linesRead++;
                             //int destFilesUnmappedCount =
-                                syncExec.FilesMissingInMapping.Count(s => s.fileType == FileType.Destination);
+                                //syncExec.FilesMissingInMapping.Count(s => s.fileType == FileType.Destination);
                             var completionPercentage = (int) Math.Round(100 * (double)mappingsAdded
                                                                         / (syncExec.DestFiles.Count));
                             //Console.Write("\r\tlines read: " + linesRead + "; mapping completion: "
@@ -129,7 +129,6 @@ namespace FileSynchronization
                             Init.DisplayCompletionInfo("line read",linesRead,totalLines);
                         }
                         Console.WriteLine("\rCompleted. File mapping lines read from csv: " + linesRead);
-                        Console.WriteLine();
                     }
                     
                 }
