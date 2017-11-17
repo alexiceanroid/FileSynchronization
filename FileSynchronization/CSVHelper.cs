@@ -30,19 +30,29 @@ namespace FileSynchronization
             }
             string fileMappingFolder = syncExec.SyncConfig.Parameters["FileMappingFolder"];
             string FileMappingCsvFullPath = fileMappingFolder + @"\" + folderMappingKey + ".csv";
-            int completionPercentage = 0;
-            var linesRead = 0;
-            Console.WriteLine("Fetching data from file " + FileMappingCsvFullPath + "...");
+            
+            
             if (File.Exists(FileMappingCsvFullPath))
             {
-                //syncExec.FileMappingCsvLocation = FileMappingCsvFullPath;
-                //var watchFileMappingFromCsv = new Stopwatch();
-                //watchFileMappingFromCsv.Start();
+                var linesRead = 0;
+                Console.WriteLine("Fetching data from file " + FileMappingCsvFullPath + "...");
+
+                
+
                 var fileMapping = syncExec.FileMappingFromCsv;
                 
                 // Read data from CSV file
                 try
                 {
+                    var totalLines = 0;
+                    using (var reader = File.OpenText(FileMappingCsvFullPath))
+                    {
+                        while (reader.ReadLine() != null)
+                        {
+                            totalLines++;
+                        }
+                    }
+
                     using (CsvFileReader reader = new CsvFileReader(FileMappingCsvFullPath))
                     {
                         CsvRow row = new CsvRow();
@@ -71,7 +81,7 @@ namespace FileSynchronization
                                String.IsNullOrEmpty(secondFileId)
                                 )
                             {
-                                throw new Exception("No second file provided in CSV file mapping");
+                                continue;
                             }
                             else
                             {
@@ -112,11 +122,14 @@ namespace FileSynchronization
                             linesRead++;
                             //int destFilesUnmappedCount =
                                 syncExec.FilesMissingInMapping.Count(s => s.fileType == FileType.Destination);
-                            completionPercentage = (int) Math.Round(100 * (double)mappingsAdded
-                                / (syncExec.DestFiles.Count));
-                            Console.Write("\r\tlines read: " + linesRead + "; mapping completion: "
-                                + completionPercentage + "%");
+                            var completionPercentage = (int) Math.Round(100 * (double)mappingsAdded
+                                                                        / (syncExec.DestFiles.Count));
+                            //Console.Write("\r\tlines read: " + linesRead + "; mapping completion: "
+                            //    + completionPercentage + "%");
+                            Init.DisplayCompletionInfo("line read",linesRead,totalLines);
                         }
+                        Console.WriteLine("\rCompleted. File mapping lines read from csv: " + linesRead);
+                        Console.WriteLine();
                     }
                     
                 }
@@ -127,12 +140,7 @@ namespace FileSynchronization
                     Console.WriteLine("could not read the csv file: " + ex.Message);
                     Console.WriteLine("clearing file mapping, proceeding with populating from paths...");
                 }
-                finally
-                {
-                    //watchFileMappingFromCsv.Stop();
-                    Console.WriteLine("file mapping lines read from csv: " + linesRead);
-                    
-                }
+                
             }
             else
             {
@@ -175,24 +183,14 @@ namespace FileSynchronization
                         var file2 = filePair.Value;
                         if (file1.basePath != sourceFolder && file1.basePath != destFolder)
                             continue;
-                        string file2FileType;
-                        string file2BasePath;
-                        string file2FullPath;
-                        string file2FileID;
-                        if (file2 == null)
-                        {
-                            file2FileType = "";
-                            file2BasePath = "";
-                            file2FileID = "";
-                            file2FullPath = "";
-                        }
-                        else
-                        {
-                            file2FileType = file2.fileType.ToString();
-                            file2BasePath = file2.basePath;
-                            file2FileID = file2.fileID;
-                            file2FullPath = file2.fullPath;
-                        }
+                        if (file1 == null || file2 == null)
+                            continue;
+
+                        var file2FileType = file2.fileType.ToString();
+                            var file2BasePath = file2.basePath;
+                            var file2FileID = file2.fileID;
+                            var file2FullPath = file2.fullPath;
+                        
                         var row = new CsvRow
                         {
                             file1.fileType.ToString(),

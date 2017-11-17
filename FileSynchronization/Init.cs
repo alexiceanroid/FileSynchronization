@@ -176,7 +176,7 @@ namespace FileSynchronization
                 int count = 0;
                 while (sourceFilesToProcess.Count > 0)
                 {
-                    count++;
+                    count += 2;
                     int lastInd = sourceFilesToProcess.Count - 1;
                     FileExtended sourceFile = sourceFilesToProcess[lastInd];
                     FileExtended destMatch = null;
@@ -218,7 +218,7 @@ namespace FileSynchronization
                     }
                     sourceFilesToProcess.Remove(sourceFile);
                     DisplayCompletionInfo("files processed", count,
-                        syncExec.FilesMissingInMapping.Count() + 2*count);
+                        syncExec.FilesMissingInMapping.Count() + count);
                 }
 
                 foreach (var sourceFile in sourceFilesWithoutCounterpart)
@@ -275,44 +275,7 @@ namespace FileSynchronization
 
         public static void DisplayCompletionInfo(string message, int currentStep, int someTotalCount)
         {
-            //int completionPercentage =
-            //    (int)Math.Round(100 * (decimal)currentStep /
-            //                    someTotalCount);
-            //if (completionPercentage > 100)
-            //{
-            //    completionPercentage = 100;
-            //}
-            //Console.Write("\r" + message + ": " + currentStep + ". Completion percentage: "
-            //              + completionPercentage + "%");
-            //draw empty progress bar
-            //Console.CursorLeft = 0;
-            //Console.Write("["); //start
-            //Console.CursorLeft = 32;
-            //Console.Write("]"); //end
-            //Console.CursorLeft = 1;
-            //float onechunk = 3.0f / someTotalCount;
-
-            //draw filled part
-            //int position = 1;
-            //for (int i = 0; i < onechunk * currentStep; i++)
-            //{
-            //    Console.BackgroundColor = ConsoleColor.Green;
-            //    Console.CursorLeft = position++;
-            //    Console.Write(" ");
-            //}
-
-            //draw unfilled part
-            //for (int i = position; i <= 31; i++)
-            //{
-            //    Console.BackgroundColor = ConsoleColor.Gray;
-            //    Console.CursorLeft = position++;
-            //    Console.Write(" ");
-            //}
-
-            //draw totals
-            //Console.CursorLeft = 35;
-            //Console.BackgroundColor = ConsoleColor.Black;
-            //Console.Write(currentStep.ToString() + " of " + someTotalCount.ToString() + "    "); //blanks at the end remove any excess
+            
 
             int barLength = 32;
             float onechunk = 1f/barLength;
@@ -334,7 +297,7 @@ namespace FileSynchronization
             Console.Write(emptyBarPart);
 
             //Console.BackgroundColor = ConsoleColor.Black;
-            Console.Write("]" + currentStep + " of " + someTotalCount);
+            Console.Write("]  "  + currentStep + " of " + someTotalCount);
         }
     }
 }

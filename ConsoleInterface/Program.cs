@@ -27,7 +27,6 @@ namespace ConsoleInterface
                     Environment.Exit(0);
             };
 
-            string MappingCsvFileName = "";
             SyncConfig confInstance = null;
             try
             {

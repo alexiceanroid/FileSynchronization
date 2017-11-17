@@ -42,15 +42,27 @@ namespace FileSynchronization
             CollectDuplicateFiles(sourceFilesToProcess, duplSourceFiles);
             CollectDuplicateFiles(destFilesToProcess, duplDestFiles);
 
+            
+
             if (duplSourceFiles.Count == 0 && duplDestFiles.Count == 0)
             {
                 Console.WriteLine("No duplicates have been found");
             }
             else
             {
+                var duplSourceValues = duplSourceFiles
+                    .Select(x => x.FileNameAndSize)
+                    .Distinct()
+                    .ToList();
+                var duplDestValues = duplDestFiles
+                    .Select(x => x.FileNameAndSize)
+                    .Distinct()
+                    .ToList();
+                int duplSourceCount = duplSourceFiles.Count - duplSourceValues.Count;
+                int duplDestCount = duplDestFiles.Count - duplDestValues.Count;
                 Console.WriteLine("Duplicates found: \n" + 
-                                    "\tsource folders       " + duplSourceFiles.Count + "\n" +
-                                    "\tdestination folders  " + duplSourceFiles.Count);
+                                    "\tsource folders       " + duplSourceCount + "\n" +
+                                    "\tdestination folders  " + duplDestCount);
 
                 Console.WriteLine("performing cleanup of source folders...");
                 CleanupDuplicateFiles(duplSourceFiles, FileType.Source, syncExec);
