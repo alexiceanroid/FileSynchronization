@@ -166,6 +166,8 @@ namespace FileSynchronization
                     (sourceName != oldSourceName || destName != oldDestName)
                     &&
                     (sourceDirectory != oldSourceDirectory || destDirectory != oldDestDirectory)
+                    &&
+                    !(sourceName == destName && sourceFile.RelativePath == destFile.RelativePath)
                 )
 
             {
@@ -194,8 +196,11 @@ namespace FileSynchronization
             }
 
             // identify Rename
-            if (sourceName != oldSourceName
-                || destName != oldDestName)
+            if (
+                (sourceName != oldSourceName || destName != oldDestName)
+                &&
+                (sourceName != destName)
+                )
             {
                 filePairAction.ActionType = ActionType.Rename;
 
@@ -218,8 +223,11 @@ namespace FileSynchronization
             }
 
             // identify Move
-            if (sourceDirectory != oldSourceDirectory
-                || destDirectory != oldDestDirectory)
+            if (
+                (sourceDirectory != oldSourceDirectory || destDirectory != oldDestDirectory)
+                &&
+                sourceFile.RelativePath != destFile.RelativePath
+                )
             {
                 filePairAction.ActionType = ActionType.Move;
 
