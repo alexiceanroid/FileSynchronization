@@ -61,13 +61,13 @@ namespace FileSynchronization
                 int duplSourceCount = duplSourceFiles.Count - duplSourceValues.Count;
                 int duplDestCount = duplDestFiles.Count - duplDestValues.Count;
                 Console.WriteLine("Duplicates found: \n" + 
-                                    "\tsource folders       " + duplSourceCount + "\n" +
-                                    "\tdestination folders  " + duplDestCount);
+                                    "\tsource files       " + duplSourceCount + "\n" +
+                                    "\tdestination files  " + duplDestCount);
 
-                Console.WriteLine("performing cleanup of source folders...");
+                Console.WriteLine("performing cleanup of source files...");
                 CleanupDuplicateFiles(duplSourceFiles, FileType.Source, syncExec);
 
-                Console.WriteLine("performing cleanup of destination folders...");
+                Console.WriteLine("\nperforming cleanup of destination files...");
                 CleanupDuplicateFiles(duplDestFiles, FileType.Destination, syncExec);
                 Console.WriteLine("\nCleanup complete");
             }
@@ -119,7 +119,7 @@ namespace FileSynchronization
                     tempFiles.Remove(lastFile);
                     duplFiles.Remove(lastFile);
                     filesList.Remove(lastFile.fileID);
-                    WorkingWithFiles.ArchiveFile(lastFile, syncLog, archiveFolder);
+                    WorkingWithFiles.ArchiveFile(lastFile, syncLog, archiveFolder,"duplicate");
                     currentStep++;
                     Init.DisplayCompletionInfo("files processed",
                         currentStep,duplFiles.Count-duplValues.Count + currentStep);
@@ -177,7 +177,5 @@ namespace FileSynchronization
                 }
             }
         }
-
-        
     }
 }

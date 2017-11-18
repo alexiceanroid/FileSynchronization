@@ -38,7 +38,7 @@ namespace FileSynchronization
             }
         }
 
-        public static void ArchiveFile(FileExtended fileToArchive, string log, string archiveFolder)
+        public static void ArchiveFile(FileExtended fileToArchive, string log, string archiveFolder, string reason)
         {
             string logMessage = "";
             try
@@ -72,9 +72,11 @@ namespace FileSynchronization
                 }
                 else
                 {
+                    string fullPath = fileToArchive.fullPath;
+                    int sizeKb = (int)Math.Floor((double)fileToArchive.FileSize / 1024);
                     File.Move(fileToArchive.fullPath, newFilePath);
-                    logMessage = "Archived file " + fileToArchive.fullPath
-                                 + "(size " + fileToArchive.FileSize / (1024) + "KB)";
+                    logMessage = reason + ": archived file " + fullPath
+                                 + " (size " + sizeKb + "KB)";
                 }
 
             }
