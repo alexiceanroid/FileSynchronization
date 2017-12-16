@@ -140,9 +140,13 @@ namespace FileSynchronization
                 DisplayCompletionInfo("completion percentage", filesAdded, totalFilesCount);
             }
 
-            if(someFilesFailed)
-                Console.WriteLine("Some files could not be added, please see the error log for details");
-            return filesArray.ToDictionary(f => f.fileID, f => f);
+            if (someFilesFailed)
+            {
+                Console.WriteLine("\nSome files could not be added, please see the error log for details:");
+                Console.WriteLine(confInstance.ErrorLogFile);
+            }
+                
+            return filesArray.Where(f => f != null).ToDictionary(f => f.fileID, f => f);
         }
 
         

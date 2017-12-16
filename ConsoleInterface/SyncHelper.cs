@@ -71,8 +71,30 @@ namespace ConsoleInterface
             string sourceVolume = DriveHelper.GetSourceVolume(syncExec.SyncConfig);
             string destVolume = DriveHelper.GetDestVolume(syncExec.SyncConfig);
 
-            int sourceAvailableSpace = DriveHelper.GetVolumeAvailableSpace(sourceVolume);
-            int destAvailableSpace = DriveHelper.GetVolumeAvailableSpace(destVolume);
+            int sourceAvailableSpace;
+            int destAvailableSpace;
+            bool networkTransfer = false;
+
+            if (sourceVolume.Contains(@"\\"))
+            {
+                sourceAvailableSpace = 0;
+                networkTransfer = true;
+            }
+            else
+            {
+                sourceAvailableSpace = DriveHelper.GetVolumeAvailableSpace(sourceVolume);
+            }
+            if (destVolume.Contains(@"\\"))
+            {
+                destAvailableSpace = 0;
+                networkTransfer = true;
+            }
+            else
+            {
+                destAvailableSpace = DriveHelper.GetVolumeAvailableSpace(destVolume);
+            }
+            
+            
 
             Console.WriteLine("Files to create:            " + filesToCreate);
             Console.WriteLine("Files to update:            " + filesToUpdate);
@@ -84,14 +106,23 @@ namespace ConsoleInterface
             Console.WriteLine("For further details, please, see the actions log file -\n"
                 + syncExec.SyncConfig.ActionsPreviewLogFile);
 
-            Console.WriteLine("\nRequired space on disk " + sourceVolume + ": " + syncExec.SpaceNeededInSource + "MB. Available space: "
-                + sourceAvailableSpace + "MB");
-            Console.WriteLine("Required space on disk " + destVolume + ": " + syncExec.SpaceNeededInDestination + "MB. Available space: "
-                              + destAvailableSpace + "MB");
-            if (sourceAvailableSpace < syncExec.SpaceNeededInSource)
-                Console.WriteLine("WARNING: there is not enough available space for synchronization to complete. Disk " + sourceVolume);
-            if (destAvailableSpace < syncExec.SpaceNeededInDestination)
-                Console.WriteLine("WARNING: there is not enough available space for synchronization to complete. Disk " + destVolume);
+            if (!networkTransfer)
+            {
+                Console.WriteLine("\nRequired space on disk " + sourceVolume + ": " + syncExec.SpaceNeededInSource +
+                                  "MB. Available space: "
+                                  + sourceAvailableSpace + "MB");
+                Console.WriteLine("Required space on disk " + destVolume + ": " + syncExec.SpaceNeededInDestination +
+                                  "MB. Available space: "
+                                  + destAvailableSpace + "MB");
+                if (sourceAvailableSpace < syncExec.SpaceNeededInSource)
+                    Console.WriteLine(
+                        "WARNING: there is not enough available space for synchronization to complete. Disk " +
+                        sourceVolume);
+                if (destAvailableSpace < syncExec.SpaceNeededInDestination)
+                    Console.WriteLine(
+                        "WARNING: there is not enough available space for synchronization to complete. Disk " +
+                        destVolume);
+            }
         }
 
         internal static void WriteFailedActions(SyncExecution syncExec, StreamWriter writer)
