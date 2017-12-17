@@ -68,6 +68,32 @@ namespace ConsoleInterface
             int filesToMove = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.Move).Count;
             int filesToDelete = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.Delete).Count;
 
+            
+            
+            
+
+            Console.WriteLine("Files to create:            " + filesToCreate);
+            Console.WriteLine("Files to update:            " + filesToUpdate);
+            Console.WriteLine("Files to rename and move:   " + filesToRenameMove);
+            Console.WriteLine("Files to rename:            " + filesToRename);
+            Console.WriteLine("Files to move:              " + filesToMove);
+            Console.WriteLine("Files to delete:            " + filesToDelete);
+            
+            Console.WriteLine("For further details, please, see the actions log file -\n"
+                + syncExec.SyncConfig.ActionsPreviewLogFile);
+
+            try
+            {
+                ShowSpaceInfo(syncExec);
+            }
+            catch(Exception e)
+            {
+                ErrorHandling.HandleException(syncExec.SyncConfig,e);
+            }
+        }
+
+        private static void ShowSpaceInfo(SyncExecution syncExec)
+        {
             string sourceVolume = DriveHelper.GetSourceVolume(syncExec.SyncConfig);
             string destVolume = DriveHelper.GetDestVolume(syncExec.SyncConfig);
 
@@ -93,18 +119,6 @@ namespace ConsoleInterface
             {
                 destAvailableSpace = DriveHelper.GetVolumeAvailableSpace(destVolume);
             }
-            
-            
-
-            Console.WriteLine("Files to create:            " + filesToCreate);
-            Console.WriteLine("Files to update:            " + filesToUpdate);
-            Console.WriteLine("Files to rename and move:   " + filesToRenameMove);
-            Console.WriteLine("Files to rename:            " + filesToRename);
-            Console.WriteLine("Files to move:              " + filesToMove);
-            Console.WriteLine("Files to delete:            " + filesToDelete);
-            
-            Console.WriteLine("For further details, please, see the actions log file -\n"
-                + syncExec.SyncConfig.ActionsPreviewLogFile);
 
             if (!networkTransfer)
             {
@@ -124,6 +138,7 @@ namespace ConsoleInterface
                         destVolume);
             }
         }
+
 
         internal static void WriteFailedActions(SyncExecution syncExec, StreamWriter writer)
         {

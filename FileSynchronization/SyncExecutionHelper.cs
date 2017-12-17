@@ -342,15 +342,16 @@ namespace FileSynchronization
             }
         }
 
-        internal void DisplaySyncProcessStats()
+        internal void DisplaySyncProcessStats(string currentFileOperation)
         {
             int filesProcessed = _filesCreated + _filesDeleted + _filesRenamedMoved 
                 + _filesMoved + _filesRenamed + _filesUpdated;
             if (filesProcessed > 1)
             {
-                Console.SetCursorPosition(0, Console.CursorTop - 7);
+                Console.SetCursorPosition(0, Console.CursorTop - 8);
             }
-            Console.Write("\rfiles created:           " + _filesCreated + "\n"
+            Console.Write(currentFileOperation + "\n"
+                          + "\rfiles created:           " + _filesCreated + "\n"
                           + "files updated:           " + _filesUpdated + "\n"
                           + "files renamed and moved: " + _filesRenamedMoved + "\n"
                           + "files renamed:           " + _filesRenamed + "\n"

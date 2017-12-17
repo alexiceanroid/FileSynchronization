@@ -328,52 +328,66 @@ namespace FileSynchronization
                     {
 
                         case ActionType.Create:
+                            var creatingFileOp = action.ActionDirection == Direction.SourceToDestination
+                                ? sourceFile.fullPath
+                                : destFile.fullPath;
+                            DisplaySyncProcessStats("Copying file " + creatingFileOp);
                             ActionCreate(sourceFile, destFile, action.ActionDirection);
                             _filesCreated++;
-                            //DisplaySyncProcessStats();
-                            Init.DisplayCompletionInfo("actions performed",
-                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
-                                ActionsList.Count);
+                            
+                            //Init.DisplayCompletionInfo("actions performed",
+                            //    _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
+                            //    ActionsList.Count);
                             break;
 
                         case ActionType.Update:
+                            var updatingFile = action.ActionDirection == Direction.SourceToDestination
+                                ? destFile.fullPath
+                                : sourceFile.fullPath;
+                            DisplaySyncProcessStats("Updating file " + updatingFile);
                             ActionUpdate(sourceFile, destFile, action.ActionDirection);
                             _filesUpdated++;
-                            Init.DisplayCompletionInfo("actions performed",
-                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
-                                ActionsList.Count);
+                            
                             break;
 
                         case ActionType.RenameMove:
+                            var movingFile = action.ActionDirection == Direction.SourceToDestination
+                                ? destFile.fullPath
+                                : sourceFile.fullPath;
+                            DisplaySyncProcessStats("Renaming and moving file " + movingFile);
                             ActionRenameMove(sourceFile, destFile, action.ActionDirection);
                             _filesRenamedMoved++;
-                            Init.DisplayCompletionInfo("actions performed",
-                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
-                                ActionsList.Count);
+                            
                             break;
 
                         case ActionType.Rename:
+                            var renamingFile = action.ActionDirection == Direction.SourceToDestination
+                                ? destFile.fullPath
+                                : sourceFile.fullPath;
+                            DisplaySyncProcessStats("Renaming file " + renamingFile);
                             ActionRenameMove(sourceFile, destFile, action.ActionDirection);
                             _filesRenamed++;
-                            Init.DisplayCompletionInfo("actions performed",
-                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
-                                ActionsList.Count);
+                            
                             break;
 
                         case ActionType.Move:
+                            var movingFile2 = action.ActionDirection == Direction.SourceToDestination
+                                ? destFile.fullPath
+                                : sourceFile.fullPath;
+                            DisplaySyncProcessStats("Renaming and moving file " + movingFile2);
                             ActionRenameMove(sourceFile, destFile, action.ActionDirection);
                             _filesMoved++;
-                            Init.DisplayCompletionInfo("actions performed",
-                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
-                                ActionsList.Count);
+                            
                             break;
 
                         case ActionType.Delete:
+                            var archivingFile = action.ActionDirection == Direction.SourceToDestination
+                                ? destFile.fullPath
+                                : sourceFile.fullPath;
+                            DisplaySyncProcessStats("Archiving file " + archivingFile);
                             ActionDelete(sourceFile, destFile, action.ActionDirection);
                             _filesDeleted++;
-                            Init.DisplayCompletionInfo("actions performed",
-                                _filesCreated + _filesDeleted + _filesMoved + _filesRenamed + _filesRenamedMoved + _filesUpdated,
-                                ActionsList.Count);
+                            
                             break;
                     }
                     action.SyncSuccess = true;

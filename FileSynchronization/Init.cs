@@ -49,43 +49,23 @@ namespace FileSynchronization
             Console.WriteLine("Destination Files: " + _totalDestFilesCount);
 
             Console.WriteLine("Populating source files list...");
-            //Task[] populatingFilesTask = new Task[2];
-            //populatingFilesTask[0] = Task.Factory.StartNew(() =>
-            //{
-                //watchSourceFiles.Start();
+
                 foreach (var pair in folderMappings)
                 {
                     PopulateSourceFiles(syncExec, pair.Value.Item1, sourceFilesTemp);
                 }
-            //syncExec.SourceFiles.Sort();
-            //watchSourceFiles.Stop();
-            //}
-            //);
 
-            //populatingFilesTask[1] = Task.Factory.StartNew(() =>
-            //    {
-            //        watchDestFiles.Start();
             Console.WriteLine("\rDone.                                                                      ");
             Console.WriteLine("Populating destination files list...");
             foreach (var pair in folderMappings)
                     {
                         PopulateDestFiles(syncExec, pair.Value.Item2, destFilesTemp);
                     }
-            //syncExec.DestFiles.Sort();
-            //        watchDestFiles.Stop();
-            //}
-            //    );
-            //Task.WaitAll(populatingFilesTask);
 
-            //watchInitFiles.Stop();
 
 
             Console.WriteLine("\rDone.                                                                      ");
             Console.WriteLine($"Elapsed time: {FormatTime(watchInitFiles.ElapsedMilliseconds)}");
-            //Console.WriteLine($"\tprocessed {_sourceFilesProcessed} of {_totalSourceFilesCount} source files");
-            //Console.WriteLine($"\telapsed time: {FormatTime(watchSourceFiles.ElapsedMilliseconds)}");
-            //Console.WriteLine($"\tprocessed {_destFilesProcessed} of {_totalDestFilesCount} destination files");
-            //Console.WriteLine($"\telapsed time: {FormatTime(watchDestFiles.ElapsedMilliseconds)}");
 
         }
 
@@ -173,8 +153,10 @@ namespace FileSynchronization
                 var destFilesMissingInMapping = syncExec.FilesMissingInMapping.
                     Where(x => x.fileType == FileType.Destination).ToList();
 
+                Console.WriteLine("Sorting files missing in mapping...");
                 sourceFilesMissingInMapping.Sort();
                 destFilesMissingInMapping.Sort();
+                Console.WriteLine("sorting complete");
 
                 int expectedFileMappingEntriesCount = Math.Max(sourceFilesMissingInMapping.Count,
                     destFilesMissingInMapping.Count);
@@ -185,14 +167,15 @@ namespace FileSynchronization
 
                 var sourceFilesToProcess = new List<FileExtended>(sourceFilesMissingInMapping);
                 var destFilesToProcess = new List<FileExtended>(destFilesMissingInMapping);
+                int filesToProcessTotal = sourceFilesToProcess.Count + destFilesToProcess.Count;
 
                 Console.WriteLine();
                 Console.WriteLine("Populating missing FileMapping from paths:");
 
-                int count = 0;
+                int filesProcessed = 0;
                 while (sourceFilesToProcess.Count > 0)
                 {
-                    count += 2;
+                    filesProcessed++;
                     int lastInd = sourceFilesToProcess.Count - 1;
                     FileExtended sourceFile = sourceFilesToProcess[lastInd];
                     FileExtended destMatch = null;
@@ -209,6 +192,7 @@ namespace FileSynchronization
                     {
                         destFilesToProcess.Remove(destMatch);
                         fileMappingFromPaths.Add(sourceFile,destMatch);
+                        filesProcessed++;
                     }
                     else
                     {
@@ -225,7 +209,7 @@ namespace FileSynchronization
                         {
                             destFilesToProcess.Remove(destMatch);
                             fileMappingFromPaths.Add(sourceFile, destMatch);
-                            
+                            filesProcessed++;
                         }
                         else
                         {
@@ -233,27 +217,29 @@ namespace FileSynchronization
                         }
                     }
                     sourceFilesToProcess.Remove(sourceFile);
-                    DisplayCompletionInfo("files processed", count,
-                        syncExec.FilesMissingInMapping.Count() + count);
+                    
+                        DisplayCompletionInfo("files processed", filesProcessed,
+                            filesToProcessTotal);
+                    
                 }
 
                 foreach (var sourceFile in sourceFilesWithoutCounterpart)
                 {
-                    count++;
+                    filesProcessed++;
                     fileMappingFromPaths.Add(sourceFile,null);
-                    DisplayCompletionInfo("files processed", count,
-                        syncExec.FilesMissingInMapping.Count() + count);
+                    DisplayCompletionInfo("files processed", filesProcessed,
+                        filesToProcessTotal);
                 }
 
                 while (destFilesToProcess.Count > 0)
                 {
                     int destFileInd = destFilesToProcess.Count - 1;
                     var destFile = destFilesToProcess[destFileInd];
-                    count++;
+                    filesProcessed++;
                     fileMappingFromPaths.Add(destFile,null);
                     destFilesToProcess.Remove(destFile);
-                    DisplayCompletionInfo("files processed", count,
-                        destFilesToProcess.Count + count);
+                    DisplayCompletionInfo("files processed", filesProcessed,
+                        filesToProcessTotal);
                 }
 
                 Console.Write("\rfinished populating missing FileMapping from paths. Added " + fileMappingFromPaths.Count + " entries.");
@@ -272,15 +258,15 @@ namespace FileSynchronization
             var watchFileMappingFromCsv = new Stopwatch();
             Console.WriteLine("\nPreparing file mapping...");
             watchFileMapping.Start();
-            watchFileMappingFromCsv.Start();
+            //watchFileMappingFromCsv.Start();
             Console.WriteLine("populating filemapping from csv:");
             foreach (var folderPair in syncExec.SyncConfig.FolderMappings)
             {
                  CSVHelper.InitFileMappingFromCsv(syncExec,folderPair.Key);
             }
-            watchFileMappingFromCsv.Stop();
-            Console.WriteLine("Done. Elapsed time: " 
-                + FormatTime(watchFileMappingFromCsv.ElapsedMilliseconds));
+            //watchFileMappingFromCsv.Stop();
+            //Console.WriteLine("Done. Elapsed time: " 
+            //    + FormatTime(watchFileMappingFromCsv.ElapsedMilliseconds));
             // append existing file mapping if app_config has been modified later than csv mapping file
             // or if csv file does not exist
             if ( syncExec.FilesMissingInMapping.Any())
@@ -295,29 +281,37 @@ namespace FileSynchronization
 
         public static void DisplayCompletionInfo(string message, int currentStep, int someTotalCount)
         {
-            
+            try
+            {
 
-            int barLength = 32;
-            float onechunk = 1f/barLength;
-            float completionRatio = (float) currentStep / someTotalCount;
+                int barLength = 32;
+                float onechunk = 1f / barLength;
+                float completionRatio = (float) currentStep / someTotalCount;
+                if (completionRatio > 1.0f)
+                    completionRatio = 1.0f;
 
-            int numberOfChunksToFill = (int)Math.Floor(completionRatio / onechunk);
-            int numberOfEmptyChunks = barLength - numberOfChunksToFill;
+                int numberOfChunksToFill = (int) Math.Floor(completionRatio / onechunk);
+                int numberOfEmptyChunks = barLength - numberOfChunksToFill;
 
-            string completedBarPart = string.Concat(Enumerable.Repeat(" ", numberOfChunksToFill));
-            string emptyBarPart = string.Concat(Enumerable.Repeat(" ", numberOfEmptyChunks));
+                string completedBarPart = string.Concat(Enumerable.Repeat(" ", numberOfChunksToFill));
+                string emptyBarPart = string.Concat(Enumerable.Repeat(" ", numberOfEmptyChunks));
 
-            Console.BackgroundColor = ConsoleColor.Black;
-            Console.Write("\r[");
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.Write("\r[");
 
-            Console.BackgroundColor = ConsoleColor.DarkGray;
-            Console.Write(completedBarPart);
+                Console.BackgroundColor = ConsoleColor.DarkGray;
+                Console.Write(completedBarPart);
 
-            Console.BackgroundColor = ConsoleColor.Black;
-            Console.Write(emptyBarPart);
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.Write(emptyBarPart);
 
-            //Console.BackgroundColor = ConsoleColor.Black;
-            Console.Write("]  "  + currentStep + " of " + someTotalCount);
+                //Console.BackgroundColor = ConsoleColor.Black;
+                Console.Write("]  " + currentStep + " of " + someTotalCount);
+            }
+            catch (Exception ex)
+            {
+                Console.Write("Cannot display completion info: " + ex.Message);
+            }
         }
     }
 }

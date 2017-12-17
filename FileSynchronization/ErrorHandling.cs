@@ -23,6 +23,14 @@ namespace FileSynchronization
             Entry = entry;
             ErrorMessage = errorMessage;
         }
+
+        public AppError(Exception ex)
+        {
+            DateTime = DateTime.Now;
+            Method = ex.StackTrace;
+            Entry = ex.Source;
+            ErrorMessage = ex.Message;
+        }
     }
 
     public static class ErrorHandling
@@ -56,6 +64,12 @@ namespace FileSynchronization
             {
                 sw.WriteLine(logTextLine);
             }
+        }
+
+        public static void HandleException(SyncConfig confInstance, Exception ex)
+        {
+            var appError = new AppError(ex);
+            WriteErrorLog(confInstance,appError);
         }
     }
 }
