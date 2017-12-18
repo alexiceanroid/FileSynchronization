@@ -346,12 +346,12 @@ namespace FileSynchronization
         {
             int filesProcessed = _filesCreated + _filesDeleted + _filesRenamedMoved 
                 + _filesMoved + _filesRenamed + _filesUpdated;
-            if (filesProcessed > 1)
+            if (filesProcessed > 0)
             {
-                Console.SetCursorPosition(0, Console.CursorTop - 8);
+                Console.SetCursorPosition(0, Console.CursorTop - 10);
             }
-            Console.Write(currentFileOperation + "\n"
-                          + "\rfiles created:           " + _filesCreated + "\n"
+            Console.Write("\r" + currentFileOperation.PadRight(260,' ') + "\n"
+                          + "files created:           " + _filesCreated + "\n"
                           + "files updated:           " + _filesUpdated + "\n"
                           + "files renamed and moved: " + _filesRenamedMoved + "\n"
                           + "files renamed:           " + _filesRenamed + "\n"
