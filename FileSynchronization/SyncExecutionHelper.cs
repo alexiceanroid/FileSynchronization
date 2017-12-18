@@ -346,17 +346,22 @@ namespace FileSynchronization
         {
             int filesProcessed = _filesCreated + _filesDeleted + _filesRenamedMoved 
                 + _filesMoved + _filesRenamed + _filesUpdated;
+
+            int w = Console.WindowWidth;
+            int textLinesSpan = (int)Math.Ceiling((double)currentFileOperation.Length / w);
+            int verticalOffset = 7 + textLinesSpan;
             if (filesProcessed > 0)
             {
-                Console.SetCursorPosition(0, Console.CursorTop - 10);
+                
+                Console.SetCursorPosition(0, Console.CursorTop - verticalOffset);
             }
-            Console.Write("\r" + currentFileOperation.PadRight(260,' ') + "\n"
-                          + "files created:           " + _filesCreated + "\n"
-                          + "files updated:           " + _filesUpdated + "\n"
-                          + "files renamed and moved: " + _filesRenamedMoved + "\n"
-                          + "files renamed:           " + _filesRenamed + "\n"
-                          + "files moved:             " + _filesMoved + "\n"
-                          + "files deleted:           " + _filesDeleted + "\n\n"
+            Console.Write("\r" + currentFileOperation.PadRight(textLinesSpan * w-1) + "\n"
+                          + ("files created:           " + _filesCreated).PadRight(w - 1) + "\n"
+                          + ("files updated:           " + _filesUpdated).PadRight(w - 1) + "\n"
+                          + ("files renamed and moved: " + _filesRenamedMoved).PadRight(w - 1) + "\n"
+                          + ("files renamed:           " + _filesRenamed).PadRight(w - 1) + "\n"
+                          + ("files moved:             " + _filesMoved).PadRight(w - 1) + "\n"
+                          + ("files deleted:           " + _filesDeleted).PadRight(w - 1) + "\n\n"
                           + "completion percentage:   " + Math.Round(100*(double)filesProcessed/ActionsList.Count) + "%") ;
             
         }
