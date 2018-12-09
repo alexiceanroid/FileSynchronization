@@ -10,7 +10,9 @@ namespace FileSynchronization
 {
     public partial class SyncExecution
     {
-
+        private readonly int _fileNameLimit =
+            @"E:\video courses\tools\Git\oreilly.com - Mastering Git 2 in 1\Mastering Git\02 Three Stage Thinking, The Git File Workflow And Speed.mp4"
+                .Length;
         private bool AddCreateAction(KeyValuePair<FileExtended,FileExtended> filePair)
         {
             bool create = false;
@@ -355,7 +357,7 @@ namespace FileSynchronization
                 
                 Console.SetCursorPosition(0, Console.CursorTop - verticalOffset);
             }
-            Console.Write("\r" + currentFileOperation.PadRight(textLinesSpan * w-1) + "\n"
+            Console.Write("\r" + TrimLeftOrPadRight(currentFileOperation) + "\n"
                           + ("files created:           " + _filesCreated).PadRight(w - 1) + "\n"
                           + ("files updated:           " + _filesUpdated).PadRight(w - 1) + "\n"
                           + ("files renamed and moved: " + _filesRenamedMoved).PadRight(w - 1) + "\n"
@@ -364,6 +366,15 @@ namespace FileSynchronization
                           + ("files deleted:           " + _filesDeleted).PadRight(w - 1) + "\n\n"
                           + "completion percentage:   " + Math.Round(100*(double)filesProcessed/ActionsList.Count) + "%") ;
             
+        }
+
+        private string TrimLeftOrPadRight(string fileName)
+        {
+            if (fileName.Length > this._fileNameLimit)
+            {
+                return fileName.Substring(fileName.Length - this._fileNameLimit, this._fileNameLimit);
+            }
+            return fileName.PadRight(this._fileNameLimit);
         }
 
         private void AddMoveAction(KeyValuePair<FileExtended,FileExtended> filePair)
