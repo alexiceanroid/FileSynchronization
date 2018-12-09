@@ -51,6 +51,9 @@ namespace ConsoleInterface
 
             var syncExec = new SyncExecution(confInstance);
 
+            if (syncExec.SyncConfig.FolderMappings.Count == 0)
+                ExitApp("No folder mappings found in config file, exiting");
+
             // initialize source and destination files:
             try
             {
@@ -61,6 +64,8 @@ namespace ConsoleInterface
                 ExitApp("Could not initialize files. \n" + e.Message);
 
             }
+
+            
 
             // remove duplicates if this is configured:
             try
