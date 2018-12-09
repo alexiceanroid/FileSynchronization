@@ -139,8 +139,8 @@ namespace FileSynchronization
         {
             
             
-            if (syncExec.SourceFiles.Count > 0)
-            {
+            //if (syncExec.SourceFiles.Count > 0)
+            //{
                 // launch timer
                 var watchAddMissingFilesToMapping = new Stopwatch();
                 watchAddMissingFilesToMapping.Start();
@@ -245,11 +245,11 @@ namespace FileSynchronization
                 Console.Write("\rfinished populating missing FileMapping from paths. Added " + fileMappingFromPaths.Count + " entries.");
                 Console.WriteLine("\nelapsed time: "+FormatTime(watchAddMissingFilesToMapping.ElapsedMilliseconds));
 
-            }
-            else
-            {
-                throw new Exception("Source files not loaded yet");
-            }
+            //}
+            //else
+            //{
+            //    throw new Exception("Source files not loaded yet");
+            //}
         }
 
         public static void MapFiles(SyncExecution syncExec)
