@@ -10,9 +10,6 @@ namespace FileSynchronization
 {
     public partial class SyncExecution
     {
-        private readonly int _fileNameLimit =
-            @"E:\video courses\tools\Git\oreilly.com - Mastering Git 2 in 1\Mastering Git\02 Three Stage Thinking, The Git File Workflow And Speed.mp4"
-                .Length;
         private bool AddCreateAction(KeyValuePair<FileExtended,FileExtended> filePair)
         {
             bool create = false;
@@ -350,14 +347,13 @@ namespace FileSynchronization
                 + _filesMoved + _filesRenamed + _filesUpdated;
 
             int w = Console.WindowWidth;
-            int textLinesSpan = (int)Math.Ceiling((double)currentFileOperation.Length / w);
-            int verticalOffset = 7 + textLinesSpan;
+            int verticalOffset = 8;
             if (filesProcessed > 0)
             {
                 
                 Console.SetCursorPosition(0, Console.CursorTop - verticalOffset);
             }
-            Console.Write("\r" + TrimLeftOrPadRight(currentFileOperation) + "\n"
+            Console.Write("\r" + TrimLeftOrPadRight(currentFileOperation, w-1) + "\n"
                           + ("files created:           " + _filesCreated).PadRight(w - 1) + "\n"
                           + ("files updated:           " + _filesUpdated).PadRight(w - 1) + "\n"
                           + ("files renamed and moved: " + _filesRenamedMoved).PadRight(w - 1) + "\n"
@@ -368,13 +364,13 @@ namespace FileSynchronization
             
         }
 
-        private string TrimLeftOrPadRight(string fileName)
+        private string TrimLeftOrPadRight(string fileName, int fileNameLimit)
         {
-            if (fileName.Length > this._fileNameLimit)
+            if (fileName.Length > fileNameLimit)
             {
-                return fileName.Substring(fileName.Length - this._fileNameLimit, this._fileNameLimit);
+                return fileName.Substring(fileName.Length - fileNameLimit, fileNameLimit);
             }
-            return fileName.PadRight(this._fileNameLimit);
+            return fileName.PadRight(fileNameLimit);
         }
 
         private void AddMoveAction(KeyValuePair<FileExtended,FileExtended> filePair)
