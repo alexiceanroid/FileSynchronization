@@ -177,8 +177,7 @@ namespace FileSynchronization
             if (fileToDelete != null)
             {
                 
-                string pathForArchival = SyncConfig.Parameters["ArchiveFolder"]
-                    + @"\" + fileToDelete.FileName;
+                string pathForArchival = Path.Combine(SyncConfig.Parameters["ArchiveFolder"], DateTime.Now.ToString("yyyy-MM-dd"));
                 string logFile = SyncConfig.SyncLog;
                 WorkingWithFiles.ArchiveFile(fileToDelete, logFile, pathForArchival,"deletion");
             }

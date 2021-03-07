@@ -70,7 +70,7 @@ namespace FileSynchronization
     public enum ActionType
     {
         None,
-        Delete,
+        //Delete,
         Create, 
         Rename,
         Move,

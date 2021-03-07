@@ -66,7 +66,7 @@ namespace ConsoleInterface
             int filesToRenameMove = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.RenameMove).Count;
             int filesToRename = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.Rename).Count;
             int filesToMove = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.Move).Count;
-            int filesToDelete = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.Delete).Count;
+            //int filesToDelete = syncExec.ActionsList.FindAll(x => x.ActionType == ActionType.Delete).Count;
 
             
             
@@ -77,7 +77,7 @@ namespace ConsoleInterface
             Console.WriteLine("Files to rename and move:   " + filesToRenameMove);
             Console.WriteLine("Files to rename:            " + filesToRename);
             Console.WriteLine("Files to move:              " + filesToMove);
-            Console.WriteLine("Files to delete:            " + filesToDelete);
+            //Console.WriteLine("Files to delete:            " + filesToDelete);
             
             Console.WriteLine("For further details, please, see the actions log file -\n"
                 + syncExec.SyncConfig.ActionsPreviewLogFile);

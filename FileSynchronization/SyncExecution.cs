@@ -49,7 +49,9 @@ namespace FileSynchronization
             long destCreationSize = 0;
 
             var creationsAndDeletions =
-                ActionsList.FindAll(x => x.ActionType == ActionType.Create || x.ActionType == ActionType.Delete);
+                ActionsList.FindAll(x => x.ActionType == ActionType.Create 
+                                         //|| x.ActionType == ActionType.Delete
+                                         );
             foreach (var action in creationsAndDeletions)
             {
                 var files = WorkingWithFiles.GetSourceAndDestFile(action.File1, action.File2);
@@ -66,17 +68,17 @@ namespace FileSynchronization
                     }
                 }
 
-                if (action.ActionType == ActionType.Delete)
-                {
-                    if (action.ActionDirection == Direction.SourceToDestination)
-                    {
-                        destDeletionSize += destFile.FileSize;
-                    }
-                    else
-                    {
-                        sourceDeletionSize += sourceFile.FileSize;
-                    }
-                }
+                //if (action.ActionType == ActionType.Delete)
+                //{
+                //    if (action.ActionDirection == Direction.SourceToDestination)
+                //    {
+                //        destDeletionSize += destFile.FileSize;
+                //    }
+                //    else
+                //    {
+                //        sourceDeletionSize += sourceFile.FileSize;
+                //    }
+                //}
             }
 
             _spaceNeededInSource = (int) Math.Round( (double)(sourceCreationSize - sourceDeletionSize) / (1024*1024));
@@ -380,15 +382,15 @@ namespace FileSynchronization
                             
                             break;
 
-                        case ActionType.Delete:
-                            var archivingFile = action.ActionDirection == Direction.SourceToDestination
-                                ? destFile.fullPath
-                                : sourceFile.fullPath;
-                            DisplaySyncProcessStats("Archiving file " + archivingFile);
-                            ActionDelete(sourceFile, destFile, action.ActionDirection);
-                            _filesDeleted++;
+                        //case ActionType.Delete:
+                        //    var archivingFile = action.ActionDirection == Direction.SourceToDestination
+                        //        ? destFile.fullPath
+                        //        : sourceFile.fullPath;
+                        //    DisplaySyncProcessStats("Archiving file " + archivingFile);
+                        //    ActionDelete(sourceFile, destFile, action.ActionDirection);
+                        //    _filesDeleted++;
                             
-                            break;
+                        //    break;
                     }
                     action.SyncSuccess = true;
                 }

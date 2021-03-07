@@ -141,8 +141,9 @@ namespace FileSynchronization
                 filePairAction.ActionType == ActionType.Rename
                 ||
                filePairAction.ActionType == ActionType.Move
-                ||
-               filePairAction.ActionType == ActionType.Delete)
+               // ||
+               //filePairAction.ActionType == ActionType.Delete
+                )
             { AddFilePairWithCheck(filePairAction);}
         }
 
@@ -253,18 +254,18 @@ namespace FileSynchronization
         {
             bool res = false;
 
-            if (sourceFile == null && destFile != null)
-            {
-                filePairAction.ActionType = ActionType.Delete;
-                filePairAction.ActionDirection = Direction.SourceToDestination;
-                res = true;
-            }
-            else if (sourceFile != null && destFile == null)
-            {
-                filePairAction.ActionType = ActionType.Delete;
-                filePairAction.ActionDirection = Direction.DestinationToSource;
-                res = true;
-            }
+            //if (sourceFile == null && destFile != null)
+            //{
+            //    filePairAction.ActionType = ActionType.Delete;
+            //    filePairAction.ActionDirection = Direction.SourceToDestination;
+            //    res = true;
+            //}
+            //else if (sourceFile != null && destFile == null)
+            //{
+            //    filePairAction.ActionType = ActionType.Delete;
+            //    filePairAction.ActionDirection = Direction.DestinationToSource;
+            //    res = true;
+            //}
             return res;
         }
 

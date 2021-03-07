@@ -97,27 +97,40 @@ namespace FileSynchronization
             
             foreach (var filePath in filesInFolder)
             {
-                if(filePath.Length >= 260)
+                var timeStamp = DateTime.Now;
+                try
                 {
-                    var timeStamp = DateTime.Now;
-                    var error = new AppError(timeStamp, "InitializeFiles",
-                        filePath, "the file path length greater than 260 is not supported by the app. Move it up the hierarchy or rename to a shorter name");
-                    ErrorHandling.WriteErrorLog(confInstance, error);
-                    someFilesFailed = true;
-                    continue;
-                }
-                var fileInfo = new FileInfo(filePath);
-                var fileExtended = new FileExtended
-                (
-                    fileType,
-                    path,
-                    fileInfo.FullName,
-                    Kernel32.GetCustomFileId(filePath)
-                );
+                    if (filePath.Length >= 260)
+                    {
+                        
+                        var error = new AppError(timeStamp, "InitializeFiles",
+                            filePath,
+                            "the file path length greater than 260 is not supported by the app. Move it up the hierarchy or rename to a shorter name");
+                        ErrorHandling.WriteErrorLog(confInstance, error);
+                        someFilesFailed = true;
+                        continue;
+                    }
+                    var fileInfo = new FileInfo(filePath);
+                    var fileExtended = new FileExtended
+                    (
+                        fileType,
+                        path,
+                        fileInfo.FullName,
+                        Kernel32.GetCustomFileId(filePath)
+                    );
 
-                filesArray[filesAdded] = fileExtended;
-                filesAdded++;
-                DisplayCompletionInfo("completion percentage", filesAdded, totalFilesCount);
+                    filesArray[filesAdded] = fileExtended;
+                    filesAdded++;
+                    DisplayCompletionInfo("completion percentage", filesAdded, totalFilesCount);
+                }
+                catch (Exception ex)
+                {
+                    var error = new AppError(timeStamp, "InitializeFiles",
+                        filePath,
+                        "the file cannot be read: " + ex.Message);
+                    ErrorHandling.WriteErrorLog(confInstance, error);
+                    throw ex;
+                }
             }
 
             if (someFilesFailed)
