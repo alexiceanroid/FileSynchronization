@@ -113,7 +113,7 @@ namespace FileSynchronization
             bool deletion = IdentifyDeletion(sourceFile, destFile, filePairAction);
             if (deletion)
             {
-                _actionList.Add(filePairAction);
+                //_actionList.Add(filePairAction);
                 return;
             }
 
@@ -254,18 +254,18 @@ namespace FileSynchronization
         {
             bool res = false;
 
-            //if (sourceFile == null && destFile != null)
-            //{
-            //    filePairAction.ActionType = ActionType.Delete;
-            //    filePairAction.ActionDirection = Direction.SourceToDestination;
-            //    res = true;
-            //}
-            //else if (sourceFile != null && destFile == null)
-            //{
-            //    filePairAction.ActionType = ActionType.Delete;
-            //    filePairAction.ActionDirection = Direction.DestinationToSource;
-            //    res = true;
-            //}
+            if (sourceFile == null && destFile != null)
+            {
+                //filePairAction.ActionType = ActionType.Delete;
+                //filePairAction.ActionDirection = Direction.SourceToDestination;
+                res = true;
+            }
+            else if (sourceFile != null && destFile == null)
+            {
+                //filePairAction.ActionType = ActionType.Delete;
+                //filePairAction.ActionDirection = Direction.DestinationToSource;
+                res = true;
+            }
             return res;
         }
 
