@@ -33,8 +33,9 @@ namespace FileSynchronization
             AppConfigLocation = (string) configReader.GetValue("ConfigFile_" + Environment.MachineName,
                 typeof(string));
 
-            InitializeFolderMappings();
             InitializeParameters();
+            InitializeFolderMappings();
+            
             var LogFolder = Parameters["LogFolder"];
             //MappingCsvFileName = GetConfigValueByName("FileMappingFile");
 
