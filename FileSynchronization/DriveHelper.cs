@@ -45,7 +45,7 @@ namespace FileSynchronization
 
                 if (!Directory.Exists(resPath))
                 {
-                    throw new DirectoryNotFoundException();
+                    throw new DirectoryNotFoundException($"Directory {resPath} specified in the config not found");
                 }
             }
             catch (Exception e)
