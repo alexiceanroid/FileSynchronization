@@ -38,31 +38,41 @@ namespace FileSynchronization
         private const string spaceSeparator = "       ";
         public static void WriteErrorLog(SyncConfig confInstance, AppError error)
         {
-            string errorLogLocation = confInstance.Parameters["LogFolder"];
-            string errorLogName = confInstance.ErrorLogFile;
-
-            if (!Directory.Exists(errorLogLocation))
+            try
             {
-                Directory.CreateDirectory(errorLogLocation);
+                var logFileNameKey = "LogFolder";
+                string errorLogLocation = confInstance.Parameters.TryGetValue(logFileNameKey, out var logFileFolder)
+                    ? logFileFolder
+                    : throw new ApplicationException("Log file directory not found in the config");
+                string errorLogName = confInstance.ErrorLogFile;
+
+                if (!Directory.Exists(errorLogLocation))
+                {
+                    Directory.CreateDirectory(errorLogLocation);
+                }
+
+                //using (StreamWriter sw = File.AppendText(errorLogName))
+                //{
+                //    sw.WriteLine("Logging started on " + DateTime.Now.
+                //        ToString(CultureInfo.InvariantCulture));
+                //    sw.WriteLine("\n\n");
+                //}
+
+                // construct log text line
+                string timeStamp = error.DateTime.ToShortDateString() + error.DateTime.ToLongTimeString();
+                string logTextLine = timeStamp + spaceSeparator
+                                               + error.Method + spaceSeparator
+                                               + error.Entry + spaceSeparator
+                                               + error.ErrorMessage;
+
+                using (StreamWriter sw = File.AppendText(errorLogName))
+                {
+                    sw.WriteLine(logTextLine);
+                }
             }
-
-            //using (StreamWriter sw = File.AppendText(errorLogName))
-            //{
-            //    sw.WriteLine("Logging started on " + DateTime.Now.
-            //        ToString(CultureInfo.InvariantCulture));
-            //    sw.WriteLine("\n\n");
-            //}
-
-            // construct log text line
-            string timeStamp = error.DateTime.ToShortDateString() + error.DateTime.ToLongTimeString();
-            string logTextLine = timeStamp + spaceSeparator
-                                 + error.Method + spaceSeparator
-                                 + error.Entry + spaceSeparator
-                                 + error.ErrorMessage;
-
-            using (StreamWriter sw = File.AppendText(errorLogName))
+            catch (Exception e)
             {
-                sw.WriteLine(logTextLine);
+                // ignored
             }
         }
 
