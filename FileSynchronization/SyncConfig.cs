@@ -99,6 +99,9 @@ namespace FileSynchronization
                 var folderPair = new Tuple<string, string>(sourceFolderResolved,destFolderResolved);
                 FolderMappings.Add(mappingName, folderPair);
             }
+
+            if (FolderMappings.Count > 1)
+                throw new ApplicationException("The app does not yet support more than one folder mapping");
         }
 
 
