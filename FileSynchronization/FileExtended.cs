@@ -20,7 +20,7 @@ namespace FileSynchronization
         }
     }
 
-    public class FileExtended : IComparable<FileExtended>
+    public class FileExtended : IComparable<FileExtended>, IEquatable<FileExtended>
     {
         public readonly FileType fileType;
         public readonly string basePath;
@@ -36,10 +36,6 @@ namespace FileSynchronization
             fullPath = _fullPath;
             lastWriteDateTime = _lastWriteDate;
             fileID = _fileId;
-        }
-
-        public FileExtended()
-        {
         }
 
         public FileExtended(FileType _fileType, string _basePath,
@@ -106,6 +102,16 @@ namespace FileSynchronization
             }
 
             return result;
+        }
+
+        public bool Equals(FileExtended other)
+        {
+            if (other == null)
+                return false;
+            if (object.ReferenceEquals(this, other))
+                return true;
+
+            return fullPath == other.fullPath;
         }
 
         public override string ToString()

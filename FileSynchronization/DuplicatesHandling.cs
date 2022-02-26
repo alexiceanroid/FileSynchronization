@@ -16,7 +16,8 @@ namespace FileSynchronization
         
         public static void RemoveDuplicates(SyncExecution syncExec)
         {
-            
+            return;
+
             var w = new Stopwatch();
             w.Start();
             Console.WriteLine();

@@ -11,7 +11,6 @@ namespace FileSynchronization
 {
     public partial class SyncExecution
     {
-        
         private List<FilePairAction> _actionList;
         private List<FilePairAction> _failedActions;
         private int _filesCreated;
@@ -33,9 +32,9 @@ namespace FileSynchronization
         // this is mapping from existing csv file for folder mapping
         //  that is no longer found in config file. This, however, can be needed
         //  in future, in case the folder mapping gets re-enabled in the config:
-        public List<CsvRow> CsvMappingToPersist { get; set; } 
+        //public List<CsvRow> CsvMappingToPersist { get; set; } 
 
-        public Dictionary<FileExtended, FileExtended> FileMappingFromCsv { get; set; }
+        //public Dictionary<FileExtended, FileExtended> FileMappingFromCsv { get; set; }
         public Dictionary<FileExtended, FileExtended> FileMappingFromPaths { get; set; }
 
         public int SpaceNeededInSource => _spaceNeededInSource;
@@ -97,10 +96,10 @@ namespace FileSynchronization
             _actionList = new List<FilePairAction>();
             //SourceFiles = new Dictionary<string, FileExtended>();
             //DestFiles = new Dictionary<string, FileExtended>();
-            FileMappingFromCsv = new Dictionary<FileExtended, FileExtended>();
+            //FileMappingFromCsv = new Dictionary<FileExtended, FileExtended>();
             FileMappingFromPaths = new Dictionary<FileExtended, FileExtended>();
             _failedActions = new List<FilePairAction>();
-            CsvMappingToPersist = new List<CsvRow>();
+            //CsvMappingToPersist = new List<CsvRow>();
             _spaceNeededInSource = 0;
             _spaceNeededInDestination = 0;
         }
@@ -116,9 +115,8 @@ namespace FileSynchronization
 
         public List<FilePairAction> ActionsList => _actionList;
 
-        public Dictionary<FileExtended, FileExtended> FileMapping =>
-            //(Dictionary<FileExtended, FileExtended>) 
-            FileMappingFromCsv.Union(FileMappingFromPaths).ToDictionary(s => s.Key, s => s.Value);
+        public Dictionary<FileExtended, FileExtended> FileMapping => FileMappingFromPaths;
+            //FileMappingFromCsv.Union(FileMappingFromPaths).ToDictionary(s => s.Key, s => s.Value);
 
         public bool FilesMatchBasedOnPaths(FileExtended f1, FileExtended f2)
         {
@@ -278,24 +276,24 @@ namespace FileSynchronization
                 //Init.DisplayCompletionInfo("entries processed from file mapping", count,FileMapping.Count);
             }
 
-            foreach (var filePair in FileMappingFromCsv)
-            {
-                count++;
-                try
-                {
-                    AddUpdateAction(filePair);
-                }
-                catch (Exception e)
-                {
-                    // construct AppError
-                    string entry = "trying to identify action. File1: " + filePair.Key.fullPath
-                                   + "; File2: " + filePair.Value.fullPath;
-                    string method = MethodBase.GetCurrentMethod().ToString();
-                    var error = new AppError(DateTime.Now, method, entry, e.Message);
-                    ErrorHandling.WriteErrorLog(SyncConfig, error);
-                }
-                //Init.DisplayCompletionInfo("entries processed from file mapping", count, FileMapping.Count);
-            }
+            // foreach (var filePair in FileMappingFromCsv)
+            // {
+            //     count++;
+            //     try
+            //     {
+            //         AddUpdateAction(filePair);
+            //     }
+            //     catch (Exception e)
+            //     {
+            //         // construct AppError
+            //         string entry = "trying to identify action. File1: " + filePair.Key.fullPath
+            //                        + "; File2: " + filePair.Value.fullPath;
+            //         string method = MethodBase.GetCurrentMethod().ToString();
+            //         var error = new AppError(DateTime.Now, method, entry, e.Message);
+            //         ErrorHandling.WriteErrorLog(SyncConfig, error);
+            //     }
+            //     //Init.DisplayCompletionInfo("entries processed from file mapping", count, FileMapping.Count);
+            // }
             _actionList.Sort();
             CalculateSpaceNeeded();
             Console.WriteLine("Done.");
@@ -408,23 +406,23 @@ namespace FileSynchronization
         }
 
 
-        public List<CsvRow> GetFileMappingPersistentByFoldMapKey(string folderMappingKey)
-        {
-            string sourceFolder = SyncConfig.FolderMappings[folderMappingKey].Item1;
-            string destFolder = SyncConfig.FolderMappings[folderMappingKey].Item2;
-            return CsvMappingToPersist.FindAll(m =>
-            {
-                string folder1 = m[1];
-                string folder2 = m[5];
-                if (
-                    (folder1 == sourceFolder && folder2 == destFolder)
-                    ||
-                    (folder2 == sourceFolder && folder1 == destFolder)
-                )
-                    return true;
-                return false;
-            });
-        }
+        // public List<CsvRow> GetFileMappingPersistentByFoldMapKey(string folderMappingKey)
+        // {
+        //     string sourceFolder = SyncConfig.FolderMappings[folderMappingKey].Item1;
+        //     string destFolder = SyncConfig.FolderMappings[folderMappingKey].Item2;
+        //     return CsvMappingToPersist.FindAll(m =>
+        //     {
+        //         string folder1 = m[1];
+        //         string folder2 = m[5];
+        //         if (
+        //             (folder1 == sourceFolder && folder2 == destFolder)
+        //             ||
+        //             (folder2 == sourceFolder && folder1 == destFolder)
+        //         )
+        //             return true;
+        //         return false;
+        //     });
+        // }
 
         
     }

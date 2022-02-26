@@ -322,25 +322,25 @@ namespace FileSynchronization
         //    return res;
         //}
 
-        internal void UpdateFileInMapping(FileExtended oldFile, FileExtended newFile)
-        {
-            FileExtended counterpartFile;
-            if (FileMappingFromCsv.ContainsKey(oldFile))
-            {
-                counterpartFile = FileMappingFromCsv[oldFile];
-                FileMappingFromCsv.Remove(oldFile);
-                FileMappingFromCsv.Add(newFile,counterpartFile);
-            }
-            else if (FileMappingFromCsv.ContainsValue(oldFile))
-            {
-                counterpartFile = FileMappingFromCsv.FirstOrDefault(x => x.Value == oldFile).Key;
-                FileMappingFromCsv[counterpartFile] = newFile;
-            }
-            else
-            {
-                throw new Exception("Could not find specified file in mapping: \n" + oldFile.fullPath);
-            }
-        }
+        // internal void UpdateFileInMapping(FileExtended oldFile, FileExtended newFile)
+        // {
+        //     FileExtended counterpartFile;
+        //     if (FileMappingFromCsv.ContainsKey(oldFile))
+        //     {
+        //         counterpartFile = FileMappingFromCsv[oldFile];
+        //         FileMappingFromCsv.Remove(oldFile);
+        //         FileMappingFromCsv.Add(newFile,counterpartFile);
+        //     }
+        //     else if (FileMappingFromCsv.ContainsValue(oldFile))
+        //     {
+        //         counterpartFile = FileMappingFromCsv.FirstOrDefault(x => x.Value == oldFile).Key;
+        //         FileMappingFromCsv[counterpartFile] = newFile;
+        //     }
+        //     else
+        //     {
+        //         throw new Exception("Could not find specified file in mapping: \n" + oldFile.fullPath);
+        //     }
+        // }
 
         internal void DisplaySyncProcessStats(string currentFileOperation)
         {

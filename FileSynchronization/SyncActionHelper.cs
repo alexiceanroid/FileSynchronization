@@ -149,7 +149,7 @@ namespace FileSynchronization
                 var oldFileExpected = new FileExtended(oldFile.fileType,oldFile.basePath,
                     oldFileExpectedFullPath, oldFile.fileID);
 
-                UpdateFileInMapping(oldFile, oldFileExpected);
+                //UpdateFileInMapping(oldFile, oldFileExpected);
 
             }
             catch (Exception ex)
@@ -158,29 +158,29 @@ namespace FileSynchronization
             }
         }
 
-        private void ActionDelete(FileExtended sourceFileExtended, FileExtended destFileExtended,
-            Direction actionDirection)
-        {
-            FileExtended fileToDelete = null;
-            switch (actionDirection)
-            {
-                case Direction.SourceToDestination:
-                    fileToDelete = destFileExtended;
-                    FileMappingFromCsv.Remove(destFileExtended);
-                    break;
-                case Direction.DestinationToSource:
-                    fileToDelete = sourceFileExtended;
-                    FileMappingFromCsv.Remove(sourceFileExtended);
-                    break;
-            }
-
-            if (fileToDelete != null)
-            {
-                
-                string pathForArchival = Path.Combine(SyncConfig.Parameters["ArchiveFolder"], DateTime.Now.ToString("yyyy-MM-dd"));
-                string logFile = SyncConfig.SyncLog;
-                WorkingWithFiles.ArchiveFile(fileToDelete, logFile, pathForArchival,"deletion");
-            }
-        }
+        // private void ActionDelete(FileExtended sourceFileExtended, FileExtended destFileExtended,
+        //     Direction actionDirection)
+        // {
+        //     FileExtended fileToDelete = null;
+        //     switch (actionDirection)
+        //     {
+        //         case Direction.SourceToDestination:
+        //             fileToDelete = destFileExtended;
+        //             FileMappingFromCsv.Remove(destFileExtended);
+        //             break;
+        //         case Direction.DestinationToSource:
+        //             fileToDelete = sourceFileExtended;
+        //             FileMappingFromCsv.Remove(sourceFileExtended);
+        //             break;
+        //     }
+        //
+        //     if (fileToDelete != null)
+        //     {
+        //         
+        //         string pathForArchival = Path.Combine(SyncConfig.Parameters["ArchiveFolder"], DateTime.Now.ToString("yyyy-MM-dd"));
+        //         string logFile = SyncConfig.SyncLog;
+        //         WorkingWithFiles.ArchiveFile(fileToDelete, logFile, pathForArchival,"deletion");
+        //     }
+        // }
     }
 }

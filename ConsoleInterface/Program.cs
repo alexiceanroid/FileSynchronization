@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using FileSynchronization;
 
 namespace ConsoleInterface
@@ -65,8 +58,6 @@ namespace ConsoleInterface
 
             }
 
-            
-
             // remove duplicates if this is configured:
             try
             {
@@ -115,7 +106,7 @@ namespace ConsoleInterface
                     {
                         syncExec.PerformActions();
                         SyncHelper.WriteFailedActionsToLog(syncExec);
-                        CSVHelper.SaveFileMappingToCsv(syncExec);
+                        //CSVHelper.SaveFileMappingToCsv(syncExec);
                     }
                     else if (proceedWithSync == "no")
                     {
@@ -140,7 +131,7 @@ namespace ConsoleInterface
             }
             else
             {
-                CSVHelper.SaveFileMappingToCsv(syncExec);
+                //CSVHelper.SaveFileMappingToCsv(syncExec);
                 ExitApp("No changes needed");
             }
 
